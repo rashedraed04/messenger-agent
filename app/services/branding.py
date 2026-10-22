@@ -29,7 +29,7 @@ OPTIONAL_DEFAULTS: dict[str, str] = {
     "store_tagline": "لبضائع وهدايا الحج والعمرة",
     "sf_header_badge": "هدايا الحج والعمرة",
     "sf_header_seal": "جودة مضمونة",
-    "sf_hero_pill": "التقوى عنواننا • هدايا مختارة للحجاج والمعتمرين",
+    "sf_hero_pill": "",
     "sf_hero_title_white": "بين يديك",
     "sf_hero_subtitle": (
         "تصفح تشكيلة مختارة من بضائع وهدايا الحج والعمرة واستفسر عن السعر أو اطلبها "
