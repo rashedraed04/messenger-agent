@@ -46,6 +46,8 @@ def get_current_user_optional(
                 "new_email": user_resp.user.new_email,
                 "store_id": user_resp.user.app_metadata.get("store_id")
                 or settings.default_store_id,
+                # Set in Supabase (app_metadata.role = "demo"); users can't edit app_metadata
+                "is_demo": user_resp.user.app_metadata.get("role") == "demo",
             }
             return user_data
     except Exception as e:
@@ -67,4 +69,31 @@ def require_auth(
             status_code=status.HTTP_303_SEE_OTHER,
             headers={"Location": "/auth/login"},
         )
+    request.state.is_demo = bool(user.get("is_demo"))
     return user
+
+
+# The demo account may chat with the bot simulator but change nothing else
+DEMO_ALLOWED_WRITES = {"/dashboard/chat/send", "/dashboard/chat/reset"}
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+
+
+def block_demo_writes(
+    request: Request,
+    user: dict[str, Any] | None = Depends(get_current_user_optional),
+) -> None:
+    """Router dependency: the read-only demo account can't save, edit or delete anything."""
+    if (
+        not user
+        or not user.get("is_demo")
+        or request.method in SAFE_METHODS
+        or request.url.path in DEMO_ALLOWED_WRITES
+    ):
+        return
+    logger.info("Blocked demo account write: %s %s", request.method, request.url.path)
+    if request.url.path.startswith("/dashboard/chat/"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="الحساب التجريبي للعرض فقط")
+    raise HTTPException(
+        status_code=status.HTTP_303_SEE_OTHER,
+        headers={"Location": "/dashboard?msg=demo_readonly"},
+    )

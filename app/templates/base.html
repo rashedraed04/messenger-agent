@@ -154,6 +154,20 @@
         </header>
 
         <div class="main-inner">
+            {% if user and user.is_demo %}
+            <div class="alert alert-info d-flex align-items-center gap-2" role="status" id="demo-banner">
+                <i class="bi bi-eye-fill" aria-hidden="true"></i>
+                <div>
+                    <strong>حساب تجريبي للعرض فقط.</strong>
+                    تقدر تتصفح كل الصفحات وتجرب البوت من «التحدث مع الوكيل»، بس ما بتقدر تعدل أو تحذف أي شي.
+                    <span class="d-block small" dir="ltr">Read-only demo: browse everything and try the bot simulator; changes are disabled.</span>
+                </div>
+            </div>
+            {% endif %}
+            {% if request.query_params.get('msg') == 'demo_readonly' %}
+            <div class="alert alert-warning" role="alert"><i class="bi bi-lock-fill" aria-hidden="true"></i> هاي الميزة مقفلة بالحساب التجريبي.</div>
+            {% endif %}
+
             <!-- Page Header -->
             {% block page_header %}{% endblock %}
 

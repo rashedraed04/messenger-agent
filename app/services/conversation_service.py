@@ -293,6 +293,7 @@ class ConversationService:
                     conversation_id=conversation_id,
                     customer_id=customer_id,
                     collected_slots=updated_slots,
+                    is_test=messenger_psid.startswith("sim_"),
                 )
                 order_num = final_order.get("order_number")
                 confirm_msg = (

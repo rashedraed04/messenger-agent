@@ -19,6 +19,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.config import get_settings
 from app.dashboard.csrf import CSRFCookieMiddleware, csrf_input, csrf_protect, get_csrf_token
+from app.dashboard.middleware import block_demo_writes
 from app.dashboard.routes import auth_router, dashboard_router
 from app.routes.health import router as health_router
 from app.routes.internal import router as internal_router
@@ -117,7 +118,7 @@ def create_app() -> FastAPI:
     application.include_router(webhook_router)
     application.include_router(internal_router)
     application.include_router(auth_router, dependencies=[Depends(csrf_protect)])
-    application.include_router(dashboard_router, dependencies=[Depends(csrf_protect)])
+    application.include_router(dashboard_router, dependencies=[Depends(csrf_protect), Depends(block_demo_writes)])
 
     return application
 

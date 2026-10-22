@@ -20,7 +20,10 @@
 {% if not current_type and product and product.size_ml %}{% set current_type = (product_types | selectattr("visual", "equalto", "bottle") | map(attribute="name_ar") | first) or '' %}{% endif %}
 <div class="row justify-content-center">
     <div class="col-xl-9">
-        <form method="post" action="{{ '/dashboard/products/' ~ product.id ~ '/edit' if is_edit else '/dashboard/products/new' }}" id="product-form">
+        {% if error %}
+        <div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> {{ error }}</div>
+        {% endif %}
+        <form method="post" action="{{ '/dashboard/products/' ~ product.id ~ '/edit' if is_edit else '/dashboard/products/new' }}" id="product-form" enctype="multipart/form-data">
             {{ csrf_input(request) }}
 
             <!-- Step 1: product type -->
@@ -113,10 +116,23 @@
                         <textarea id="f-desc" name="description_ar" rows="3" class="form-control" placeholder="وصف قصير يظهر للزبائن ويستخدمه البوت للتعريف بالمنتج...">{{ product.description_ar if product else '' }}</textarea>
                     </div>
 
+                    {% set image_url = product.image_url if product and product.image_url else '' %}
                     <div class="col-12">
-                        <label class="form-label" for="f-image">رابط صورة المنتج (اختياري)</label>
-                        <input type="url" id="f-image" name="image_url" class="form-control" dir="ltr" value="{{ product.image_url if product and product.image_url else '' }}" placeholder="https://example.com/product.jpg">
-                        <small class="text-secondary">إذا تُرك فارغاً يظهر رسم ذهبي حسب نوع المنتج.</small>
+                        <label class="form-label" for="f-image-file">صورة المنتج (اختياري)</label>
+                        <div class="d-flex flex-wrap align-items-center gap-3">
+                            <img id="image-preview" src="{{ image_url }}" alt="معاينة صورة المنتج" class="rounded border" style="width: 96px; height: 96px; object-fit: cover;" {% if not image_url %}hidden{% endif %}>
+                            <div class="d-flex flex-column gap-2">
+                                <input type="file" id="f-image-file" name="image_file" class="form-control" accept="image/jpeg,image/png,image/webp">
+                                <button type="button" id="image-remove" class="btn btn-sm btn-outline-danger align-self-start" {% if not image_url %}hidden{% endif %}>
+                                    <i class="bi bi-trash" aria-hidden="true"></i> إزالة الصورة
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-secondary d-block mt-1">اختر صورة من الهاتف أو الكمبيوتر (JPG أو PNG أو WebP). إذا لم تُضف صورة يظهر رسم ذهبي حسب نوع المنتج.</small>
+                        <details class="mt-2" {% if image_url and '/storage/v1/object/public/product-images/' not in image_url %}open{% endif %}>
+                            <summary class="small text-secondary">أو استخدم رابط صورة من الإنترنت</summary>
+                            <input type="url" id="f-image" name="image_url" class="form-control mt-2" dir="ltr" value="{{ image_url }}" placeholder="https://example.com/product.jpg" aria-label="رابط صورة المنتج">
+                        </details>
                     </div>
 
                     <div class="col-12">
@@ -169,6 +185,72 @@
             if (e.target.name === 'product_type') apply();
         });
         apply();
+    })();
+
+    // Photo picker: preview, shrink large photos before upload, remove
+    (function () {
+        var MAX_SIDE = 1200;
+        var fileInput = document.getElementById('f-image-file');
+        var urlInput = document.getElementById('f-image');
+        var preview = document.getElementById('image-preview');
+        var removeBtn = document.getElementById('image-remove');
+
+        function show(src) {
+            preview.src = src || '';
+            preview.hidden = !src;
+            removeBtn.hidden = !src;
+        }
+
+        function shrink(file) {
+            return new Promise(function (resolve) {
+                var img = new Image();
+                var objectUrl = URL.createObjectURL(file);
+                img.onload = function () {
+                    URL.revokeObjectURL(objectUrl);
+                    var scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+                    if (scale === 1 && file.size < 400 * 1024) return resolve(file);
+                    var canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    var type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                    canvas.toBlob(function (blob) {
+                        if (!blob || blob.size >= file.size) return resolve(file);
+                        var ext = type === 'image/png' ? '.png' : '.jpg';
+                        resolve(new File([blob], file.name.replace(/\.[^.]+$/, '') + ext, { type: type }));
+                    }, type, 0.85);
+                };
+                img.onerror = function () {
+                    URL.revokeObjectURL(objectUrl);
+                    resolve(file);
+                };
+                img.src = objectUrl;
+            });
+        }
+
+        fileInput.addEventListener('change', function () {
+            var file = fileInput.files[0];
+            if (!file) return show(urlInput.value);
+            show(URL.createObjectURL(file));
+            shrink(file).then(function (smaller) {
+                if (smaller === file || typeof DataTransfer === 'undefined') return;
+                try {
+                    var dt = new DataTransfer();
+                    dt.items.add(smaller);
+                    fileInput.files = dt.files;
+                } catch (e) { /* older browsers upload the original */ }
+            });
+        });
+
+        urlInput.addEventListener('input', function () {
+            if (!fileInput.files.length) show(urlInput.value.trim());
+        });
+
+        removeBtn.addEventListener('click', function () {
+            fileInput.value = '';
+            urlInput.value = '';
+            show('');
+        });
     })();
 </script>
 {% endblock %}

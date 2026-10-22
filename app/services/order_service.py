@@ -349,9 +349,10 @@ class OrderService:
         conversation_id: str,
         customer_id: str | None,
         collected_slots: dict[str, Any],
+        is_test: bool = False,
     ) -> dict[str, Any]:
         """
-        Execute confirmed order:
+        Execute confirmed order (is_test marks dashboard-simulator orders):
         1. Final stock verification
         2. Insert into orders and order_items
         3. Update customer record
@@ -388,6 +389,7 @@ class OrderService:
             "delivery_fee_jod": price_summary.delivery_fee_jod,
             "total_jod": price_summary.total_jod,
             "notes": collected_slots.get("notes"),
+            "is_test": is_test,
         }
 
         items_data = [

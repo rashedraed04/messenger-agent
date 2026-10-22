@@ -122,3 +122,17 @@ def test_agent_chat_send_message_endpoint(auth_chat_client):
         assert "ديور سوفاج" in data["replies"][0]
         assert "conversation" in data
         assert data["conversation"]["state"] == "DISCOVERY"
+
+
+def test_send_ignores_non_simulator_session(auth_chat_client):
+    """A real customer's PSID must never be reachable from the simulator."""
+    with patch(
+        "app.services.conversation_service.ConversationService.handle_customer_message",
+        new_callable=AsyncMock,
+    ) as mock_handle:
+        mock_handle.return_value = ["هلا"]
+        auth_chat_client.post(
+            "/dashboard/chat/send",
+            json={"message": "مرحبا", "customer_name": None, "session_id": "1234567890123456"},
+        )
+        assert mock_handle.call_args.kwargs["messenger_psid"].startswith("sim_")

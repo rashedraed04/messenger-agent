@@ -20,6 +20,7 @@ from app.ai.gemini_provider import GeminiProvider
 from app.ai.provider_interface import ImageInput
 from app.config import Settings
 from app.dashboard.middleware import require_auth
+from app.dashboard.rate_limit import demo_chat_limiter
 from app.db.repositories.conversations import ConversationRepository
 from app.db.repositories.customers import CustomerRepository
 from app.db.repositories.faqs import FAQRepository
@@ -81,9 +82,12 @@ def _decode_image_data_url(data_url: str) -> ImageInput | None:
 
 
 def _build_conversation_service(
-    db: Client, config: Settings, store_id: str
+    db: Client, config: Settings, store_id: str, send_alerts: bool = True
 ) -> tuple[ConversationService, ConversationRepository, CustomerRepository, StoreSettingRepository, ProductRepository]:
-    """Assemble all repositories and the conversation orchestrator service."""
+    """Assemble all repositories and the conversation orchestrator service.
+
+    send_alerts=False keeps demo visitors from pinging the owner's Telegram.
+    """
     conv_repo = ConversationRepository(db)
     customer_repo = CustomerRepository(db)
     product_repo = ProductRepository(db)
@@ -112,7 +116,7 @@ def _build_conversation_service(
         setting_repo=setting_repo,
         order_service=order_service,
         ai_provider=ai_provider,
-        alert_notifier=TelegramReporter(config.telegram_bot_token, config.telegram_chat_id),
+        alert_notifier=TelegramReporter(config.telegram_bot_token, config.telegram_chat_id) if send_alerts else None,
     )
 
     return conv_service, conv_repo, customer_repo, setting_repo, product_repo
@@ -215,7 +219,16 @@ async def send_customer_message(
     """
     store_id = user.get("store_id") or config.default_store_id
     user_id = str(user.get("id") or "admin")
-    psid = payload.session_id or _get_or_create_sim_session(user_id)
+    # Only simulator sessions: a real customer's PSID must never be reachable from here
+    psid = _get_or_create_sim_session(user_id, payload.session_id)
+
+    if user.get("is_demo"):
+        if demo_chat_limiter.is_limited(user_id):
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={"success": False, "error": "وصلت للحد المسموح للحساب التجريبي، جرب بعد شوي."},
+            )
+        demo_chat_limiter.hit(user_id)
 
     images: list[ImageInput] = []
     if payload.image_data_url:
@@ -233,7 +246,7 @@ async def send_customer_message(
         )
 
     conv_service, conv_repo, customer_repo, _, _ = _build_conversation_service(
-        db, config, store_id
+        db, config, store_id, send_alerts=not user.get("is_demo")
     )
 
     # Dispatch to conversation service orchestrator
@@ -350,7 +363,7 @@ def toggle_agent_handoff(
 ):
     """Toggle human handoff status on the simulated testing conversation."""
     store_id = user.get("store_id") or config.default_store_id
-    psid = payload.session_id or _get_or_create_sim_session(str(user.get("id") or "admin"))
+    psid = _get_or_create_sim_session(str(user.get("id") or "admin"), payload.session_id)
 
     _, conv_repo, customer_repo, _, _ = _build_conversation_service(db, config, store_id)
     customer = customer_repo.get_or_create(store_id, psid)

@@ -104,6 +104,7 @@ class OrderRepository:
         """
         Fetch all confirmed orders for a specific date (for daily Telegram reports).
         Matches confirmed_at within that day's Asia/Amman midnight-to-midnight.
+        Simulator test orders are left out so they never reach the courier.
         """
         start_of_day = datetime.combine(target_date, time.min, tzinfo=AMMAN_TZ)
         end_of_day = start_of_day + timedelta(days=1)
@@ -115,6 +116,7 @@ class OrderRepository:
             .gte("confirmed_at", start_of_day.isoformat())
             .lt("confirmed_at", end_of_day.isoformat())
             .neq("status", OrderStatus.CANCELLED.value)
+            .eq("is_test", False)
             .order("confirmed_at", desc=False)
             .execute()
         )

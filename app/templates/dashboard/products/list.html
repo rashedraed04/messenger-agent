@@ -24,6 +24,15 @@
 {% endblock %}
 
 {% block content %}
+{% set messages = {
+    'created': 'تمت إضافة المنتج بنجاح.',
+    'updated': 'تم حفظ تعديلات المنتج.',
+    'deleted': 'تم حذف المنتج.',
+} %}
+{% if msg in messages %}
+<div class="alert alert-success" role="status"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> {{ messages[msg] }}</div>
+{% endif %}
+
 <!-- Search & Filters -->
 <div class="card p-3 mb-4">
     <form method="get" action="/dashboard/products" class="row g-3">
@@ -36,6 +45,9 @@
                 {% for t in product_types %}
                 <option value="{{ t.name_ar }}" {% if selected_type == t.name_ar %}selected{% endif %}>{{ t.name_ar }}</option>
                 {% endfor %}
+                {% if selected_type and selected_type not in (product_types | map(attribute="name_ar") | list) %}
+                <option value="{{ selected_type }}" selected>{{ selected_type }}</option>
+                {% endif %}
             </select>
         </div>
         <div class="col-6 col-md-2">

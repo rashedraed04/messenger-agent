@@ -21,6 +21,7 @@ from app.dependencies import get_db
 from app.main import app
 from app.models.product import ProductCreate
 from app.services.branding import build_branding, get_branding, invalidate_branding
+from app.services.product_photos import detect_photo_type
 
 STORE_ID = "00000000-0000-0000-0000-000000000001"
 TYPE_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
@@ -179,6 +180,141 @@ def test_create_product_saves_type(client, authed):
     inserted = mock_query.insert.call_args[0][0]
     assert inserted["product_type"] == "مسابح"
     assert inserted["size_ml"] is None
+
+
+def test_create_product_unticked_active_switch_saves_inactive(client, authed):
+    _, mock_query = authed([])
+    res = client.post("/dashboard/products/new", data={
+        "name_ar": "مسبحة", "price_jod": "5", "category": "رجالي", "product_type": "مسابح",
+    }, follow_redirects=False)
+    assert res.status_code == 303
+    assert mock_query.insert.call_args[0][0]["is_active"] is False
+
+
+@pytest.mark.parametrize("data", [
+    {"name_ar": "   ", "price_jod": "5"},
+    {"name_ar": "مسبحة", "price_jod": "-1"},
+    {"name_ar": "مسبحة", "price_jod": "100000000"},
+])
+def test_create_product_rejects_invalid_fields(client, authed, data):
+    _, mock_query = authed([])
+    res = client.post("/dashboard/products/new", data=data, follow_redirects=False)
+    assert res.status_code == 400
+    assert 'class="alert alert-danger"' in res.text
+    mock_query.insert.assert_not_called()
+
+
+def test_duplicate_product_name_rerenders_form(client, authed):
+    _, mock_query = authed([])
+    insert_query = MagicMock()
+    insert_query.execute.side_effect = Exception(
+        "{'code': '23505', 'message': 'duplicate key value violates unique constraint \"uq_products_store_name\"'}"
+    )
+    mock_query.insert.return_value = insert_query
+    res = client.post("/dashboard/products/new", data={
+        "name_ar": "مسبحة يسر", "price_jod": "7.5", "category": "رجالي", "product_type": "مسابح",
+    }, follow_redirects=False)
+    assert res.status_code == 400
+    assert "بنفس الاسم" in res.text
+    assert 'value="مسبحة يسر"' in res.text
+
+
+def test_product_bad_id_is_not_found(client, authed):
+    _, mock_query = authed([])
+    assert client.get("/dashboard/products/not-a-uuid/edit").status_code == 404
+    res = client.post("/dashboard/products/not-a-uuid/delete", follow_redirects=False)
+    assert res.status_code == 303
+    mock_query.delete.assert_not_called()
+
+
+def test_products_list_shows_saved_message(client, authed):
+    authed([])
+    assert "تمت إضافة المنتج بنجاح" in client.get("/dashboard/products?msg=created").text
+
+
+PHOTO_PREFIX = "https://test-project.supabase.co/storage/v1/object/public/product-images/"
+PRODUCT_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+JPEG_BYTES = b"\xff\xd8\xff\xe0" + b"0" * 64
+
+
+def test_detect_photo_type_reads_file_signature():
+    assert detect_photo_type(JPEG_BYTES) == ("image/jpeg", "jpg")
+    assert detect_photo_type(b"\x89PNG\r\n\x1a\n....") == ("image/png", "png")
+    assert detect_photo_type(b"RIFF\x00\x00\x00\x00WEBPVP8 ") == ("image/webp", "webp")
+    assert detect_photo_type(b"<svg onload=alert(1)>") is None
+
+
+def test_create_product_uploads_photo(client, authed):
+    mock_db, mock_query = authed([])
+    res = client.post("/dashboard/products/new", data={
+        "name_ar": "مسبحة", "price_jod": "5",
+    }, files={"image_file": ("photo.jpg", JPEG_BYTES, "image/jpeg")}, follow_redirects=False)
+    assert res.status_code == 303
+    mock_db.storage.from_.assert_called_with("product-images")
+    path, data, options = mock_db.storage.from_.return_value.upload.call_args[0]
+    assert path.startswith(STORE_ID + "/") and path.endswith(".jpg")
+    assert data == JPEG_BYTES and options["content-type"] == "image/jpeg"
+    assert mock_query.insert.call_args[0][0]["image_url"] == PHOTO_PREFIX + path
+
+
+def test_create_product_rejects_non_image_upload(client, authed):
+    mock_db, mock_query = authed([])
+    res = client.post("/dashboard/products/new", data={
+        "name_ar": "مسبحة", "price_jod": "5",
+    }, files={"image_file": ("photo.jpg", b"not an image", "image/jpeg")}, follow_redirects=False)
+    assert res.status_code == 400
+    assert "نوع الملف غير مدعوم" in res.text
+    mock_db.storage.from_.return_value.upload.assert_not_called()
+    mock_query.insert.assert_not_called()
+
+
+def test_create_product_without_photo_keeps_pasted_link(client, authed):
+    # What a browser sends when the file input is left empty
+    mock_db, mock_query = authed([])
+    body = "".join(
+        f'--B\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'
+        for name, value in [("name_ar", "مسبحة"), ("price_jod", "5"), ("image_url", "https://example.com/a.jpg")]
+    ) + (
+        '--B\r\nContent-Disposition: form-data; name="image_file"; filename=""\r\n'
+        "Content-Type: application/octet-stream\r\n\r\n\r\n--B--\r\n"
+    )
+    res = client.post(
+        "/dashboard/products/new", content=body.encode(),
+        headers={"Content-Type": "multipart/form-data; boundary=B"}, follow_redirects=False,
+    )
+    assert res.status_code == 303
+    mock_db.storage.from_.return_value.upload.assert_not_called()
+    assert mock_query.insert.call_args[0][0]["image_url"] == "https://example.com/a.jpg"
+
+
+def test_edit_product_new_photo_replaces_old_one(client, authed):
+    old = PHOTO_PREFIX + STORE_ID + "/old.jpg"
+    mock_db, _ = authed([{"id": PRODUCT_ID, "store_id": STORE_ID, "image_url": old}])
+    res = client.post(f"/dashboard/products/{PRODUCT_ID}/edit", data={
+        "name_ar": "مسبحة", "price_jod": "5", "image_url": old,
+    }, files={"image_file": ("photo.jpg", JPEG_BYTES, "image/jpeg")}, follow_redirects=False)
+    assert res.status_code == 303
+    mock_db.storage.from_.return_value.remove.assert_called_once_with([STORE_ID + "/old.jpg"])
+
+
+def test_edit_product_unchanged_photo_is_kept(client, authed):
+    old = PHOTO_PREFIX + STORE_ID + "/old.jpg"
+    mock_db, _ = authed([{"id": PRODUCT_ID, "store_id": STORE_ID, "image_url": old}])
+    res = client.post(f"/dashboard/products/{PRODUCT_ID}/edit", data={
+        "name_ar": "مسبحة", "price_jod": "5", "image_url": old,
+    }, follow_redirects=False)
+    assert res.status_code == 303
+    mock_db.storage.from_.return_value.remove.assert_not_called()
+
+
+def test_delete_product_removes_uploaded_photo_only(client, authed):
+    mock_db, _ = authed([{"id": PRODUCT_ID, "image_url": PHOTO_PREFIX + STORE_ID + "/a.jpg"}])
+    client.post(f"/dashboard/products/{PRODUCT_ID}/delete", follow_redirects=False)
+    mock_db.storage.from_.return_value.remove.assert_called_once_with([STORE_ID + "/a.jpg"])
+
+    mock_db, _ = authed([{"id": PRODUCT_ID, "image_url": "https://example.com/a.jpg"}])
+    client.post(f"/dashboard/products/{PRODUCT_ID}/delete", follow_redirects=False)
+    mock_db.storage.from_.return_value.remove.assert_not_called()
 
 
 def test_product_save_retries_without_type_before_migration():

@@ -4,7 +4,7 @@ Integration and route tests for dashboard authentication and pages.
 
 from unittest.mock import MagicMock
 import pytest
-from app.dashboard.middleware import require_auth
+from app.dashboard.middleware import get_current_user_optional, require_auth
 from app.dependencies import get_db
 from app.main import app
 
@@ -111,3 +111,53 @@ def test_bot_toggle_saves_setting(auth_client, form, value, msg):
     saved = [c for c in mock_db.table.return_value.upsert.call_args_list]
     assert saved and saved[-1].args[0]["setting_key"] == "bot_enabled"
     assert saved[-1].args[0]["setting_value"] == value
+
+
+@pytest.fixture
+def demo_client(client):
+    mock_db = MagicMock()
+    mock_query = MagicMock()
+    for name in ("select", "eq", "gte", "lte", "neq", "in_", "or_", "order", "range", "limit", "upsert", "insert", "update", "delete"):
+        getattr(mock_query, name).return_value = mock_query
+    mock_query.execute.return_value = MagicMock(data=[], count=0)
+    mock_db.table.return_value = mock_query
+    demo_user = {"id": "demo-1", "email": "user@test.com", "store_id": "00000000-0000-0000-0000-000000000001", "is_demo": True}
+    app.dependency_overrides[get_db] = lambda: mock_db
+    app.dependency_overrides[require_auth] = lambda: demo_user
+    app.dependency_overrides[get_current_user_optional] = lambda: demo_user
+    yield client, mock_db
+    for dep in (get_db, require_auth, get_current_user_optional):
+        app.dependency_overrides.pop(dep, None)
+
+
+def test_demo_account_sees_banner(demo_client):
+    client, _ = demo_client
+    res = client.get("/dashboard")
+    assert res.status_code == 200
+    assert 'id="demo-banner"' in res.text
+
+
+@pytest.mark.parametrize("path", [
+    "/dashboard/bot-toggle",
+    "/dashboard/settings",
+    "/dashboard/products/new",
+    "/dashboard/faqs/new",
+    "/dashboard/reports/send-now",
+    "/dashboard/account/password",
+    "/dashboard/account/email",
+])
+def test_demo_account_cannot_change_anything(demo_client, path):
+    client, mock_db = demo_client
+    res = client.post(path, data={"x": "1"}, follow_redirects=False)
+    assert res.status_code == 303
+    assert res.headers["location"] == "/dashboard?msg=demo_readonly"
+    assert not mock_db.table.return_value.upsert.called
+    assert not mock_db.table.return_value.insert.called
+    assert not mock_db.table.return_value.update.called
+    assert not mock_db.table.return_value.delete.called
+
+
+def test_demo_account_cannot_toggle_handoff(demo_client):
+    client, _ = demo_client
+    res = client.post("/dashboard/chat/handoff-toggle", json={"session_id": "sim_x", "is_handoff": True})
+    assert res.status_code == 403
