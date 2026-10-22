@@ -326,6 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const meta = (idx === data.replies.length - 1) ? data.ai_metadata : null;
                     appendAgentBubble(reply, meta);
                 });
+            } else if (data.bot_enabled === false) {
+                appendAgentBubble('⏸️ البوت متوقف حالياً، فما رح يرد على الزبائن. شغّله من الصفحة الرئيسية للوحة التحكم.');
             } else if (data.conversation && data.conversation.is_human_handoff) {
                 appendAgentBubble('⚠️ تم تحويل المحادثة لموظف بشري؛ البوت الآلي في وضع السكون لهذه الجلسة.');
             }

@@ -270,6 +270,8 @@ async def send_customer_message(
     return {
         "success": True,
         "replies": replies,
+        # Only an empty reply needs explaining; skip the lookup otherwise
+        "bot_enabled": bool(replies) or StoreSettingRepository(db).get_bot_config(store_id).get("bot_enabled", True),
         "conversation": {
             "id": conv_id,
             "state": conv.get("state", ConversationState.DISCOVERY.value),

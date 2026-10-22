@@ -64,7 +64,6 @@ def test_humanize_reply_empty():
         conversation_service.FRESH_GREETING_REPLY,
         conversation_service.CANCEL_REPLY,
         conversation_service.HANDOFF_REPLY,
-        conversation_service.BOT_DISABLED_REPLY,
         conversation_service.FINALIZE_ERROR_REPLY,
     ],
 )

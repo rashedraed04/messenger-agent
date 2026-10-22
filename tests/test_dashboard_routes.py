@@ -91,3 +91,23 @@ def test_dashboard_pages_render_authenticated(auth_client):
 ])
 def test_removed_pages_are_gone(auth_client, path):
     assert auth_client.get(path).status_code == 404
+
+
+def test_overview_shows_bot_toggle(auth_client):
+    res = auth_client.get("/dashboard")
+    assert 'action="/dashboard/bot-toggle"' in res.text
+    assert "إيقاف البوت" in res.text  # no setting saved yet means the bot is on
+
+
+@pytest.mark.parametrize("form, value, msg", [
+    ({"enabled": "true"}, "true", "bot_on"),
+    ({}, "false", "bot_off"),
+])
+def test_bot_toggle_saves_setting(auth_client, form, value, msg):
+    mock_db = app.dependency_overrides[get_db]()
+    res = auth_client.post("/dashboard/bot-toggle", data=form, follow_redirects=False)
+    assert res.status_code == 303
+    assert res.headers["location"] == f"/dashboard?msg={msg}"
+    saved = [c for c in mock_db.table.return_value.upsert.call_args_list]
+    assert saved and saved[-1].args[0]["setting_key"] == "bot_enabled"
+    assert saved[-1].args[0]["setting_value"] == value

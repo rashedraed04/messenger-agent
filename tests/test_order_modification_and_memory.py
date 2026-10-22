@@ -572,3 +572,22 @@ def test_build_chat_turns_alternates_roles():
         ("model", "أبشر\nشو الاسم؟"),
         ("user", "مرحبا"),
     ]
+
+
+@pytest.mark.asyncio
+async def test_disabled_bot_stays_silent(repos, order_service):
+    """Bot switched off from the dashboard: no reply at all, no AI call, message still logged."""
+    repos["setting"].get_bot_config.return_value = {
+        "bot_enabled": False,
+        "human_handoff_message": "تم تحويلك لخدمة العملاء",
+    }
+    repos["conv"].get_or_create.return_value = _conversation(
+        ConversationState.DISCOVERY, {}, datetime.now(timezone.utc)
+    )
+    service, ai = _make_service(repos, order_service, AIResponse(response_text="هلا"))
+
+    replies = await service.handle_customer_message(STORE_ID, "psid-1", "مرحبا")
+
+    assert replies == []
+    assert ai.calls == []
+    repos["conv"].add_message.assert_called_once()

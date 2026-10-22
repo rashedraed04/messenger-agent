@@ -48,7 +48,6 @@ FRESH_GREETING_REPLY = (
 
 CANCEL_REPLY = "ولا يهمك يا غالي، لغيتلك الطلب. وإذا لزمك أي شي بوقت ثاني احنا موجودين."
 HANDOFF_REPLY = "تكرم عينك، هسا بخلي حدا من الشباب يحكي معك بأقرب وقت 🙏"
-BOT_DISABLED_REPLY = "هلا والله، ثواني وبرد عليك حدا من الشباب."
 FINALIZE_ERROR_REPLY = (
     "معلش صار عندي لخبطة بسيطة وأنا بثبت الطلب، "
     "هسا حدا من الشباب رح يتابع معك ويأكدلك إياه."
@@ -204,11 +203,11 @@ class ConversationService:
             logger.info("Conversation %s is in human handoff mode; skipping AI response.", conversation_id)
             return []
 
-        # 5. Check if bot is enabled for this store
+        # 5. Bot switched off from the dashboard: stay silent, the owner answers from the Page inbox
         bot_config = self.setting_repo.get_bot_config(store_id)
         if not bot_config.get("bot_enabled", True):
-            handoff_msg = bot_config.get("human_handoff_message", BOT_DISABLED_REPLY)
-            return [humanize_reply(handoff_msg)]
+            logger.info("Bot disabled for store %s; not replying.", store_id)
+            return []
 
         # 5b. A photo we couldn't download and no text: nothing for the model to work with
         if unreadable_images and not images and not user_text.strip():

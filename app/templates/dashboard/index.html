@@ -17,6 +17,41 @@
 {% if db_warning %}
 <div class="alert alert-warning">{{ db_warning }}</div>
 {% endif %}
+{% if msg == 'bot_on' %}
+<div class="alert alert-success" role="status"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> تم تشغيل البوت، ورح يرد على رسائل الصفحة.</div>
+{% elif msg == 'bot_off' %}
+<div class="alert alert-warning" role="status"><i class="bi bi-pause-circle-fill" aria-hidden="true"></i> تم إيقاف البوت، وما رح يرد على أي رسالة لحد ما تشغله.</div>
+{% endif %}
+
+<div class="card glass-panel mb-4" id="bot-status-card">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3 px-4 py-3">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-robot fs-2 {{ 'text-success' if bot_enabled else 'text-secondary' }}" aria-hidden="true"></i>
+            <div>
+                <div class="fw-bold">
+                    البوت الذكي:
+                    {% if bot_enabled %}<span class="badge bg-success">شغّال</span>{% else %}<span class="badge bg-secondary">متوقف</span>{% endif %}
+                </div>
+                <div class="small text-secondary">
+                    {% if bot_enabled %}بيرد تلقائياً على رسائل الزبائن على الماسنجر.{% else %}ما بيرد على أي رسالة، وانت بترد بنفسك من صندوق رسائل الصفحة.{% endif %}
+                </div>
+            </div>
+        </div>
+        <form method="post" action="/dashboard/bot-toggle" class="m-0">
+            {{ csrf_input(request) }}
+            {% if bot_enabled %}
+            <button type="submit" class="btn btn-outline-danger px-4" id="btn-bot-toggle">
+                <i class="bi bi-pause-fill" aria-hidden="true"></i> إيقاف البوت
+            </button>
+            {% else %}
+            <input type="hidden" name="enabled" value="true">
+            <button type="submit" class="btn btn-primary btn-gold-solid px-4" id="btn-bot-toggle">
+                <i class="bi bi-play-fill" aria-hidden="true"></i> تشغيل البوت
+            </button>
+            {% endif %}
+        </form>
+    </div>
+</div>
 
 <div class="row g-4">
     <!-- Recent Orders -->
