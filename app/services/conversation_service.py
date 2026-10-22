@@ -105,6 +105,14 @@ class ConversationService:
         self.alert_notifier = alert_notifier
         self.catalog_image_fetcher = catalog_image_fetcher
 
+    def is_bot_enabled(self, store_id: str) -> bool:
+        """Whether the store owner has the bot switched on (dashboard toggle)."""
+        try:
+            return bool(self.setting_repo.get_bot_config(store_id).get("bot_enabled", True))
+        except Exception as e:
+            logger.warning("Could not read bot_enabled for store %s: %s", store_id, e)
+            return True
+
     async def handle_customer_message(
         self,
         store_id: str,
@@ -206,6 +214,7 @@ class ConversationService:
         # 5. Bot switched off from the dashboard: stay silent, the owner answers from the Page inbox
         bot_config = self.setting_repo.get_bot_config(store_id)
         if not bot_config.get("bot_enabled", True):
+            # Return before any AI call, so a disabled bot spends no Gemini quota
             logger.info("Bot disabled for store %s; not replying.", store_id)
             return []
 

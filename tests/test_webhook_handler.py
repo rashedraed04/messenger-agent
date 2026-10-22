@@ -106,3 +106,52 @@ def test_webhook_idempotency_deduplication():
     assert res2[0]["status"] == "duplicate_skipped"
     # Call count should not have increased
     assert mock_conv_service.handle_customer_message.call_count == 1
+
+
+def _single_message_payload(mid: str) -> dict:
+    return {
+        "object": "page",
+        "entry": [{
+            "id": "page_123",
+            "messaging": [{
+                "sender": {"id": "user_456"},
+                "recipient": {"id": "page_123"},
+                "message": {"mid": mid, "text": "مرحبا"},
+            }],
+        }],
+    }
+
+
+def _handler(bot_enabled: bool, replies: list[str]):
+    from app.messenger.webhook_handler import WebhookHandler
+
+    event_repo = MagicMock()
+    event_repo.mark_processed_if_new.return_value = True
+    conv_service = MagicMock()
+    conv_service.is_bot_enabled.return_value = bot_enabled
+    conv_service.handle_customer_message = AsyncMock(return_value=replies)
+    send_api = MagicMock()
+    send_api.send_reply = AsyncMock()
+    send_api.send_typing_indicator = AsyncMock()
+    return WebhookHandler(event_repo=event_repo, conversation_service=conv_service, send_api=send_api), send_api
+
+
+def test_disabled_bot_shows_no_typing_indicator():
+    import asyncio
+
+    handler, send_api = _handler(bot_enabled=False, replies=[])
+    asyncio.run(handler.process_payload("s1", _single_message_payload("mid_off")))
+
+    send_api.send_typing_indicator.assert_not_awaited()
+    send_api.send_reply.assert_not_awaited()
+
+
+def test_typing_indicator_cleared_when_no_reply():
+    """Bot on but chat handed to the owner: the dots must not stay on screen."""
+    import asyncio
+
+    handler, send_api = _handler(bot_enabled=True, replies=[])
+    asyncio.run(handler.process_payload("s1", _single_message_payload("mid_handoff")))
+
+    actions = [c.args[1] for c in send_api.send_typing_indicator.await_args_list]
+    assert actions == ["typing_on", "typing_off"]

@@ -130,11 +130,13 @@ class WebhookHandler:
                     results.append({"mid": mid, "status": "duplicate_skipped"})
                     continue
 
-                # Fire typing indicator to give visual feedback to customer
-                try:
-                    await self.send_api.send_typing_indicator(sender_psid, "typing_on")
-                except Exception as e:
-                    logger.warning("Failed to send typing indicator: %s", e)
+                # Typing indicator only when the bot is switched on; a disabled bot shows nothing
+                bot_enabled = self.conversation_service.is_bot_enabled(store_id)
+                if bot_enabled:
+                    try:
+                        await self.send_api.send_typing_indicator(sender_psid, "typing_on")
+                    except Exception as e:
+                        logger.warning("Failed to send typing indicator: %s", e)
 
                 # Process turn through conversation engine
                 try:
@@ -150,6 +152,12 @@ class WebhookHandler:
                     # Send all replies via Meta Send API
                     for reply_text in replies:
                         await self.send_api.send_reply(sender_psid, reply_text)
+                    # No reply (e.g. chat handed to the owner): clear the dots we showed
+                    if not replies and bot_enabled:
+                        try:
+                            await self.send_api.send_typing_indicator(sender_psid, "typing_off")
+                        except Exception as e:
+                            logger.warning("Failed to clear typing indicator: %s", e)
 
                     results.append({"mid": mid, "status": "processed", "replies_sent": len(replies)})
                 except Exception as e:
