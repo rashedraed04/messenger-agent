@@ -225,6 +225,26 @@ def show_product_detail(
     )
 
 
+@router.get("/privacy", response_class=HTMLResponse)
+def show_privacy_policy(
+    request: Request,
+    db: Client = Depends(get_db),
+    config: Settings = Depends(get_config),
+):
+    """Public privacy policy (required by Meta to publish the Messenger app)."""
+    store_name, store_desc = _store_info(db, config.default_store_id)
+    templates = request.app.state.templates
+    return templates.TemplateResponse(
+        "storefront/privacy.html",
+        {
+            "request": request,
+            "store_name": store_name,
+            "store_desc": store_desc,
+            "facebook_page_id": _page_id(config),
+        },
+    )
+
+
 @router.get("/api/public/products")
 def api_public_products(
     q: str | None = Query(None),

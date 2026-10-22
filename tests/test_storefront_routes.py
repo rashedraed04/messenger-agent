@@ -190,3 +190,16 @@ def test_product_detail_unknown_returns_404(client: TestClient):
 def test_storefront_cards_link_to_detail_page(client: TestClient):
     res = client.get("/")
     assert 'href="/perfume/' in res.text
+
+
+def test_privacy_policy_page(client: TestClient):
+    """Meta needs a public privacy policy with data-deletion instructions."""
+    res = client.get("/privacy")
+    assert res.status_code == 200
+    html = res.text
+    assert "سياسة الخصوصية" in html
+    assert 'id="data-deletion"' in html
+    assert "m.me/" in html
+
+    # Linked from every storefront page footer
+    assert 'href="/privacy"' in client.get("/").text

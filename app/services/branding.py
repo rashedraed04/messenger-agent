@@ -43,6 +43,8 @@ OPTIONAL_DEFAULTS: dict[str, str] = {
     ]),
     "sf_footer_about": "وجهتك الأولى لهدايا الحجاج والمعتمرين ومستلزمات الحج والعمرة في المملكة الأردنية الهاشمية",
     "sf_location": "عمان، الأردن",
+    # Shown on /privacy next to Messenger as a way to request data deletion
+    "privacy_contact": "",
 }
 
 BRANDING_KEYS = (*REQUIRED_DEFAULTS, *OPTIONAL_DEFAULTS)

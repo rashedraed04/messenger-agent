@@ -137,6 +137,11 @@
                         <label class="form-label fw-bold" for="s-location">الموقع (يظهر في التذييل):</label>
                         <input type="text" id="s-location" name="sf_location" class="form-control" value="{{ sf('sf_location') }}">
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" for="s-privacy">بريد أو هاتف لطلبات الخصوصية (اختياري):</label>
+                        <input type="text" id="s-privacy" name="privacy_contact" class="form-control" value="{{ sf('privacy_contact') }}" placeholder="مثال: store@gmail.com">
+                        <small class="text-secondary">يظهر في <a href="/privacy" target="_blank">صفحة سياسة الخصوصية</a> بجانب ماسنجر.</small>
+                    </div>
                 </div>
             </div>
         </div>

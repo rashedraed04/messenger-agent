@@ -83,6 +83,7 @@ def update_settings(
     sf_cta_label: str | None = Form(None),
     sf_footer_about: str | None = Form(None),
     sf_location: str | None = Form(None),
+    privacy_contact: str | None = Form(None),
     user: dict[str, Any] = Depends(require_auth),
     db: Client = Depends(get_db),
     config: Settings = Depends(get_config),
@@ -123,6 +124,7 @@ def update_settings(
         "sf_cta_label": sf_cta_label,
         "sf_footer_about": sf_footer_about,
         "sf_location": sf_location,
+        "privacy_contact": privacy_contact,
     }
     multiline = {"sf_hero_subtitle", "sf_trust_badges", "sf_footer_about"}
     for key, value in storefront_fields.items():
