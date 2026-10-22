@@ -101,9 +101,13 @@ class TelegramReporter:
         """
         Send formatted text message to Telegram target chat.
         """
-        if not self.bot_token or not self.chat_id or self.bot_token.startswith("test-"):
+        if self.bot_token.startswith("test-"):
             logger.info("Mock Telegram message dispatch: chat_id=%s, len=%d", self.chat_id, len(text))
             return True
+        if not self.bot_token or not self.chat_id:
+            # Not configured: report failure so nothing is recorded as delivered
+            logger.warning("Telegram not configured (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID); message not sent")
+            return False
 
         url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
         payload = {
