@@ -5,6 +5,7 @@ Unit tests for ReportService and Telegram formatters.
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 import pytest
+from app.db.repositories.orders import OrderRepository
 from app.services.report_service import ReportService
 from app.telegram.reporter import format_telegram_daily_report
 
@@ -87,3 +88,17 @@ async def test_report_service_generate_and_send():
     assert "ORD-1" in res["content"]
     assert telegram_mock.send_message.call_count == 1
     assert report_repo.save_report.call_count == 1
+
+
+def test_confirmed_orders_query_uses_amman_day():
+    """The report day runs from Amman midnight to Amman midnight, not UTC."""
+    client = MagicMock()
+    query = client.table.return_value.select.return_value.eq.return_value
+    query.gte.return_value.lt.return_value.neq.return_value.order.return_value.execute.return_value.data = []
+
+    OrderRepository(client).get_confirmed_orders_by_date("s1", date(2026, 10, 22))
+
+    start = query.gte.call_args.args[1]
+    end = query.gte.return_value.lt.call_args.args[1]
+    assert start == "2026-10-22T00:00:00+03:00"
+    assert end == "2026-10-23T00:00:00+03:00"

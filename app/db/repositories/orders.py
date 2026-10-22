@@ -2,13 +2,16 @@
 Order repository for database operations on orders and order_items tables.
 """
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 import secrets
 from typing import Any
+from dateutil import tz
 from supabase import Client
 
 from app.models.order import OrderCreate, OrderItemCreate, OrderStatus
+
+AMMAN_TZ = tz.gettz("Asia/Amman") or timezone(timedelta(hours=3))
 
 
 class OrderRepository:
@@ -100,17 +103,17 @@ class OrderRepository:
     ) -> list[dict[str, Any]]:
         """
         Fetch all confirmed orders for a specific date (for daily Telegram reports).
-        Matches confirmed_at date range.
+        Matches confirmed_at within that day's Asia/Amman midnight-to-midnight.
         """
-        start_of_day = f"{target_date.isoformat()}T00:00:00+00:00"
-        end_of_day = f"{target_date.isoformat()}T23:59:59+00:00"
+        start_of_day = datetime.combine(target_date, time.min, tzinfo=AMMAN_TZ)
+        end_of_day = start_of_day + timedelta(days=1)
 
         res = (
             self.client.table(self.orders_table)
             .select("*, order_items(*)")
             .eq("store_id", store_id)
-            .gte("confirmed_at", start_of_day)
-            .lte("confirmed_at", end_of_day)
+            .gte("confirmed_at", start_of_day.isoformat())
+            .lt("confirmed_at", end_of_day.isoformat())
             .neq("status", OrderStatus.CANCELLED.value)
             .order("confirmed_at", desc=False)
             .execute()

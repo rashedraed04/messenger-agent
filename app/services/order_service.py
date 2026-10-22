@@ -9,6 +9,7 @@ Coordinates:
 - Order placement
 """
 
+from datetime import datetime, timezone
 import re
 from typing import Any
 from app.db.repositories.conversations import ConversationRepository
@@ -378,6 +379,7 @@ class OrderService:
             "customer_id": customer_id,
             "conversation_id": conversation_id,
             "status": OrderStatus.CONFIRMED.value,
+            "confirmed_at": datetime.now(timezone.utc).isoformat(),
             "customer_name": collected_slots.get("customer_name"),
             "customer_phone": collected_slots.get("customer_phone"),
             "governorate": collected_slots.get("governorate"),
