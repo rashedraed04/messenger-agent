@@ -102,3 +102,45 @@ def test_confirmed_orders_query_uses_amman_day():
     end = query.gte.return_value.lt.call_args.args[1]
     assert start == "2026-10-22T00:00:00+03:00"
     assert end == "2026-10-23T00:00:00+03:00"
+
+
+def _report_service(existing):
+    order_repo = MagicMock()
+    order_repo.get_confirmed_orders_by_date.return_value = []
+    report_repo = MagicMock()
+    report_repo.get_by_date.return_value = existing
+    setting_repo = MagicMock()
+    setting_repo.get_all.return_value = {}
+    telegram = MagicMock()
+    telegram.send_message = AsyncMock(return_value=True)
+    service = ReportService(order_repo, report_repo, setting_repo, telegram)
+    return service, report_repo, telegram
+
+
+@pytest.mark.asyncio
+async def test_manual_send_does_not_block_nightly_report():
+    service, report_repo, telegram = _report_service(
+        {"sent_successfully": True, "is_scheduled": False}
+    )
+    res = await service.generate_and_send_daily_report("s1", date(2026, 10, 22), scheduled=True)
+
+    assert res["sent"] is True
+    assert telegram.send_message.await_count == 1
+    assert report_repo.save_report.call_args.kwargs["is_scheduled"] is True
+
+
+@pytest.mark.asyncio
+async def test_nightly_report_not_repeated():
+    service, _, telegram = _report_service({"sent_successfully": True, "is_scheduled": True})
+    res = await service.generate_and_send_daily_report("s1", date(2026, 10, 22), scheduled=True)
+
+    assert res["already_sent"] is True
+    telegram.send_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_manual_resend_keeps_nightly_flag():
+    service, report_repo, _ = _report_service({"sent_successfully": True, "is_scheduled": True})
+    await service.generate_and_send_daily_report("s1", date(2026, 10, 22), force_resend=True)
+
+    assert report_repo.save_report.call_args.kwargs["is_scheduled"] is True

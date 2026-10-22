@@ -74,6 +74,7 @@ async def trigger_daily_report(
         result = await report_service.generate_and_send_daily_report(
             store_id=store_id,
             force_resend=force,
+            scheduled=True,
         )
         return {
             "status": "success",

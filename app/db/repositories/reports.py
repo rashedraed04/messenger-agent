@@ -2,7 +2,7 @@
 Report repository for database operations on report_history table.
 """
 
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Any
 from supabase import Client
 
@@ -34,6 +34,7 @@ class ReportRepository:
         report_content: str,
         sent_successfully: bool,
         error_message: str | None = None,
+        is_scheduled: bool = False,
     ) -> dict[str, Any]:
         """Upsert a daily report record."""
         payload = {
@@ -42,6 +43,8 @@ class ReportRepository:
             "report_content": report_content,
             "sent_successfully": sent_successfully,
             "error_message": error_message,
+            "is_scheduled": is_scheduled,
+            "sent_at": datetime.now(timezone.utc).isoformat(),
         }
         res = (
             self.client.table(self.table)

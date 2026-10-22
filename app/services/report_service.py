@@ -41,10 +41,14 @@ class ReportService:
         store_id: str,
         target_date: date | None = None,
         force_resend: bool = False,
+        scheduled: bool = False,
     ) -> dict[str, Any]:
         """
         Aggregate confirmed orders for target_date and send report via Telegram.
         Also persists result in report_history table for auditing and keepalive.
+
+        Only a successful scheduled (nightly) send blocks a repeat for the day;
+        a manual "send now" from the dashboard never stops the nightly report.
 
         Returns:
             Dict summarizing report result:
@@ -53,10 +57,14 @@ class ReportService:
         if target_date is None:
             target_date = self.get_amman_today()
 
+        existing = self.report_repo.get_by_date(store_id, target_date)
+        nightly_already_sent = bool(
+            existing and existing.get("sent_successfully") and existing.get("is_scheduled")
+        )
+
         # Check if already sent and not forced
         if not force_resend:
-            existing = self.report_repo.get_by_date(store_id, target_date)
-            if existing and existing.get("sent_successfully"):
+            if nightly_already_sent:
                 logger.info(
                     "Report for store %s on %s was already sent successfully. Skipping.",
                     store_id,
@@ -98,6 +106,8 @@ class ReportService:
             report_content=report_text,
             sent_successfully=sent_successfully,
             error_message=error_message,
+            # A manual resend after the nightly report must not clear its flag
+            is_scheduled=(scheduled and sent_successfully) or nightly_already_sent,
         )
 
         return {
