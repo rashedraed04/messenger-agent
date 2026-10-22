@@ -1,5 +1,5 @@
--- =============================================================================
--- 008: Flag orders placed from the dashboard bot simulator
+﻿-- =============================================================================
+-- 009: Flag orders placed from the dashboard bot simulator
 -- =============================================================================
 -- Simulator chats use a messenger_psid starting with 'sim_'. Their orders are
 -- kept for testing but must never reach the courier list in the daily
