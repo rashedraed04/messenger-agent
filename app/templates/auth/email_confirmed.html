@@ -1,0 +1,41 @@
+{% extends "auth/_layout.html" %}
+
+{% block title %}تأكيد البريد الإلكتروني{% endblock %}
+{% block subtitle %}تأكيد تغيير البريد الإلكتروني{% endblock %}
+
+{% block content %}
+<div class="success-alert mb-3" id="confirm-done" role="status" hidden>
+    تم تأكيد بريدك الإلكتروني الجديد بنجاح. استخدمه من الآن لتسجيل الدخول.
+</div>
+<div class="success-alert mb-3" id="confirm-partial" role="status" hidden>
+    تم قبول رابط التأكيد. لإتمام التغيير، افتح أيضاً رابط التأكيد المرسل إلى بريدك الآخر (القديم أو الجديد).
+</div>
+<div class="error-alert mb-3" id="confirm-failed" role="alert" hidden>
+    رابط التأكيد غير صالح أو منتهي الصلاحية. اطلب تغيير البريد مرة أخرى من صفحة «الحساب والأمان».
+</div>
+<div class="auth-hint mb-3" id="confirm-unknown">
+    إذا ضغطت على رابط التأكيد من بريدك، فسيتم تطبيق التغيير بعد تأكيده. يمكنك التحقق من بريدك الحالي في صفحة «الحساب والأمان».
+</div>
+<a href="/auth/login" class="btn btn-login w-100" id="btn-go-login">الذهاب إلى لوحة التحكم</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Supabase reports the outcome in the URL fragment; show it and drop any tokens from the address bar.
+    (function () {
+        var hash = window.location.hash.replace(/^#/, '');
+        if (!hash) return;
+        history.replaceState(null, '', window.location.pathname);
+
+        var params = new URLSearchParams(hash);
+        var show = null;
+        if (params.get('error') || params.get('error_code')) show = 'confirm-failed';
+        else if (params.get('access_token')) show = 'confirm-done';
+        else if (params.get('message')) show = 'confirm-partial';
+        if (!show) return;
+
+        document.getElementById('confirm-unknown').hidden = true;
+        document.getElementById(show).hidden = false;
+    })();
+</script>
+{% endblock %}

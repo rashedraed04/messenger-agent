@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token(request) }}">
+    <meta name="description" content="لوحة تحكم {{ brand.full_name }} — إدارة المنتجات والطلبات والمحادثات">
+    <title>{% block title %}لوحة التحكم{% endblock %} | {{ brand.store_name }}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='img/logo.png') }}">
+
+    <!-- Google Fonts — IBM Plex Sans Arabic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet"
+          integrity="sha384-dpuaG1suU0eT09tx5plTaGMLBsfDLzUCCUXOY2j/LSvXYuG6Bqs43ALlhIqAJVRb" crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Apply saved theme before paint to avoid a flash of the wrong theme -->
+    <script>
+        try {
+            if (localStorage.getItem('theme') === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        } catch (e) {}
+    </script>
+
+    <!-- Custom Dashboard Styles -->
+    <link href="{{ url_for('static', path='css/dashboard.css') }}" rel="stylesheet">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% block body %}
+    <!-- Sidebar -->
+    <nav class="sidebar d-flex flex-column" id="sidebar">
+        <a href="/dashboard" class="sidebar-brand">
+            <img src="{{ url_for('static', path='img/logo.png') }}" alt="شعار {{ brand.store_name }}" class="brand-logo">
+            <div class="brand-name">{{ brand.store_name }}</div>
+            {% if brand.store_tagline %}<div class="brand-tagline">{{ brand.store_tagline }}</div>{% endif %}
+        </a>
+        <ul class="nav flex-column mt-3 flex-grow-1">
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'overview' %}active{% endif %}"
+                   href="/dashboard" id="nav-overview">
+                    <i class="nav-icon bi bi-speedometer2" aria-hidden="true"></i> الرئيسية
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'products' %}active{% endif %}"
+                   href="/dashboard/products" id="nav-products">
+                    <i class="nav-icon bi bi-droplet-half" aria-hidden="true"></i> المنتجات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'categories' %}active{% endif %}"
+                   href="/dashboard/categories" id="nav-categories">
+                    <i class="nav-icon bi bi-tags-fill" aria-hidden="true"></i> الفئات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'product_types' %}active{% endif %}"
+                   href="/dashboard/product-types" id="nav-product-types">
+                    <i class="nav-icon bi bi-grid-3x3-gap-fill" aria-hidden="true"></i> أنواع المنتجات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'agent_chat' %}active{% endif %}"
+                   href="/dashboard/chat" id="nav-agent-chat">
+                    <i class="nav-icon bi bi-robot" aria-hidden="true"></i> التحدث مع الوكيل
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'faqs' %}active{% endif %}"
+                   href="/dashboard/faqs" id="nav-faqs">
+                    <i class="nav-icon bi bi-question-circle-fill" aria-hidden="true"></i> الأسئلة الشائعة
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'reports' %}active{% endif %}"
+                   href="/dashboard/reports" id="nav-reports">
+                    <i class="nav-icon bi bi-pie-chart-fill" aria-hidden="true"></i> التقارير
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'settings' %}active{% endif %}"
+                   href="/dashboard/settings" id="nav-settings">
+                    <i class="nav-icon bi bi-gear-fill" aria-hidden="true"></i> الإعدادات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'setup' %}active{% endif %}"
+                   href="/dashboard/setup" id="nav-setup">
+                    <i class="nav-icon bi bi-rocket-takeoff-fill" aria-hidden="true"></i> إعداد النظام
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'account' %}active{% endif %}"
+                   href="/dashboard/account" id="nav-account">
+                    <i class="nav-icon bi bi-shield-lock-fill" aria-hidden="true"></i> الحساب والأمان
+                </a>
+            </li>
+        </ul>
+
+        <!-- Theme toggle + logout at bottom -->
+        <div class="sidebar-footer p-3 d-flex flex-column gap-2">
+            <button type="button" class="btn btn-theme-toggle w-100" onclick="toggleTheme()" id="btn-theme-toggle">
+                ☀️ الوضع الفاتح
+            </button>
+            <form action="/auth/logout" method="post">
+                {{ csrf_input(request) }}
+                <button type="submit" class="btn btn-logout w-100" id="btn-logout">
+                    <i class="bi bi-box-arrow-left" aria-hidden="true"></i> تسجيل الخروج
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Mobile sidebar toggle + backdrop -->
+    <button class="btn btn-sidebar-toggle d-md-none position-fixed"
+            onclick="toggleSidebar()" id="btn-toggle-sidebar" aria-label="القائمة" aria-controls="sidebar" aria-expanded="false">
+        <i class="bi bi-list" aria-hidden="true"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar(false)" hidden></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-welcome">
+                <div class="topbar-crown"><i class="bi bi-gem" aria-hidden="true"></i></div>
+                <div class="min-w-0">
+                    <div class="topbar-title">مرحباً بك في لوحة تحكم <span class="gold">{{ brand.full_name }}</span></div>
+                    <div class="topbar-sub">إدارة المنتجات والطلبات والتواصل مع الزبائن بأعلى درجات الرفاهية</div>
+                </div>
+            </div>
+            <div class="topbar-meta">
+                <a href="/" target="_blank" rel="noopener" class="status-pill text-decoration-none" id="link-view-store">
+                    <i class="bi bi-shop" aria-hidden="true"></i> عرض المتجر
+                </a>
+                <div class="user-chip">
+                    <div>
+                        <div class="user-role">مدير المتجر</div>
+                        <div class="user-perm">{{ user.email if user and user.email else 'صلاحيات كاملة' }}</div>
+                    </div>
+                    <div class="user-avatar" aria-hidden="true">{{ brand.initial }}</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-inner">
+            <!-- Page Header -->
+            {% block page_header %}{% endblock %}
+
+            <!-- Flash Messages (rendered as data attributes for JS toast) -->
+            {% if flash_messages %}
+                {% for msg in flash_messages %}
+                    <div data-flash-message="{{ msg.text }}" data-flash-type="{{ msg.type }}" style="display:none;"></div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+
+        <footer class="app-footer">
+            <span>جميع الحقوق محفوظة © 2026 <span class="gold">{{ brand.full_name }}</span></span>
+            <span>لوحة الإدارة الفاخرة</span>
+        </footer>
+    </main>
+    {% endblock %}
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <!-- Custom Dashboard JS -->
+    <script src="{{ url_for('static', path='js/dashboard.js') }}"></script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

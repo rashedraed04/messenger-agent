@@ -1,0 +1,17 @@
+{% if pagination and (pagination.has_prev or pagination.has_next) %}
+<nav class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top" style="border-color: var(--border-color) !important;" aria-label="ترقيم الصفحات">
+    <span class="text-secondary small">صفحة {{ pagination.page }}</span>
+    <div class="d-flex gap-2">
+        {% if pagination.has_prev %}
+        <a href="{{ pagination.prev_url }}" class="btn btn-sm btn-outline-secondary" rel="prev">→ السابق</a>
+        {% else %}
+        <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">→ السابق</span>
+        {% endif %}
+        {% if pagination.has_next %}
+        <a href="{{ pagination.next_url }}" class="btn btn-sm btn-outline-secondary" rel="next">التالي ←</a>
+        {% else %}
+        <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">التالي ←</span>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}

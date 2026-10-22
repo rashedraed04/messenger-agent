@@ -1,0 +1,94 @@
+{% extends "storefront/layout.html" %}
+{% from "storefront/_macros.html" import product_visual %}
+
+{% block title %}{{ product.name_ar }}{% if product.brand %} — {{ product.brand }}{% endif %} | {{ brand.store_name }}{% endblock %}
+{% block meta_description %}{{ (product.description_ar or store_desc) | truncate(155) }}{% endblock %}
+
+{% block content %}
+<main class="container detail-section">
+    <nav class="detail-breadcrumb" aria-label="مسار التصفح">
+        <a href="/">المتجر</a>
+        {% if product.product_type %}
+        <span class="mx-1">›</span>
+        <a href="/?type={{ product.product_type | urlencode }}">{{ product.product_type }}</a>
+        {% elif product.category %}
+        <span class="mx-1">›</span>
+        <a href="/?category={{ product.category | urlencode }}">{{ product.category }}</a>
+        {% endif %}
+        <span class="mx-1">›</span>
+        <span class="text-light">{{ product.name_ar }}</span>
+    </nav>
+
+    <div class="row g-4 g-lg-5 align-items-start">
+        <div class="col-lg-5">
+            <div class="detail-visual{% if product.image_url %} has-photo{% endif %}">
+                {% if product.category %}
+                <span class="category-tag">{{ product.category }}</span>
+                {% endif %}
+                {% if product.brand %}
+                <span class="brand-tag">{{ product.brand }}</span>
+                {% endif %}
+                {{ product_visual(product, width=130) }}
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            {% if product.brand %}
+            <div class="detail-brand fw-semibold mb-1">{{ product.brand }}</div>
+            {% endif %}
+            <h1 class="detail-title">{{ product.name_ar }}</h1>
+            {% if product.name_en %}
+            <div class="perfume-title-en mb-0">{{ product.name_en }}</div>
+            {% endif %}
+
+            <div class="detail-meta">
+                {% if product.category %}
+                <span class="detail-chip"><span class="detail-chip-label">الفئة:</span>{{ product.category }}</span>
+                {% endif %}
+                {% if product.product_type %}
+                <span class="detail-chip"><span class="detail-chip-label">النوع:</span>{{ product.product_type }}</span>
+                {% endif %}
+                {% if product.size_text %}
+                <span class="detail-chip"><span class="detail-chip-label">الحجم:</span>{{ product.size_text }}</span>
+                {% endif %}
+                <span class="detail-chip"><span class="detail-chip-label">التوفر:</span><i class="bi bi-check-circle-fill text-success" aria-hidden="true"></i> متوفر</span>
+            </div>
+
+            <p class="detail-desc">
+                {{ product.description_ar or "منتج مميز بجودة عالية، هدية مثالية للحجاج والمعتمرين." }}
+            </p>
+
+            {% if notes %}
+            <h2 class="detail-notes-title">{{ product.details_label }}</h2>
+            <div class="perfume-tags mb-4">
+                {% for note in notes %}
+                <a href="/?q={{ note | urlencode }}" class="tag-badge text-decoration-none">#{{ note }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Direct Messenger CTA (Strictly No Prices Shown) -->
+            <a href="{{ product.messenger_url }}" target="_blank" rel="noopener noreferrer" class="btn-messenger detail-cta" id="btn-inquire-detail">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.91 1.455 5.512 3.734 7.21v3.532l3.418-1.875c.915.253 1.884.39 2.848.39 5.523 0 10-4.145 10-9.257C22 6.145 17.523 2 12 2zm1.004 12.443l-2.548-2.72-4.97 2.72 5.467-5.803 2.613 2.72 4.905-2.72-5.467 5.803z"/>
+                </svg>
+                <span>{{ brand.sf_cta_label }}</span>
+            </a>
+            <div class="detail-assurance">
+                <i class="bi bi-shield-check" aria-hidden="true"></i> جودة مضمونة · <i class="bi bi-truck" aria-hidden="true"></i> توصيل لجميع المحافظات · <i class="bi bi-cash-coin" aria-hidden="true"></i> الدفع عند الاستلام
+            </div>
+        </div>
+    </div>
+
+    {% if related %}
+    <h2 class="related-title">منتجات مشابهة{% if product.product_type %} من {{ product.product_type }}{% elif product.category %} من فئة {{ product.category }}{% endif %}</h2>
+    <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-4">
+        {% for p in related %}
+        <div class="col">
+            {% include "storefront/_card.html" %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</main>
+{% endblock %}

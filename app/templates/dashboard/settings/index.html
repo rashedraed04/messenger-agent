@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% set active_page = "settings" %}
+
+{% block title %}إعدادات المتجر والبوت{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">إعدادات المتجر والبوت الذكي</h1>
+        <p class="page-subtitle mb-0">تخصيص هوية المتجر ونصوص الواجهة العامة ولهجة البوت ومفاتيح الربط</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if msg == 'saved' %}
+<div class="alert alert-success" role="status"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> تم حفظ الإعدادات.</div>
+{% endif %}
+{% macro sf(key) %}{{ settings[key] if key in settings else branding_defaults[key] }}{% endmacro %}
+<form method="post" action="/dashboard/settings">
+    {{ csrf_input(request) }}
+    <div class="row g-4">
+        <!-- Bot Personality & Greetings -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h5 class="card-title mb-3"><i class="bi bi-robot text-primary" aria-hidden="true"></i> شخصية ولهجة البوت</h5>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">رسالة الترحيب الأولى للزبون:</label>
+                    <textarea name="bot_greeting" rows="3" class="form-control" required>{{ settings.get('bot_greeting', '') }}</textarea>
+                    <small class="text-secondary">الرسالة التي يرسلها البوت أول ما يفتح الزبون المحادثة.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">توجيه اللهجة والأسلوب:</label>
+                    <textarea name="bot_tone" rows="4" class="form-control" required>{{ settings.get('bot_tone', '') }}</textarea>
+                    <small class="text-secondary">مثال: استخدم لهجة أردنية بيضاء مهذبة وودية (يا هلا، نورتنا، تكرم عينك).</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">رسالة التحويل لموظف خدمة العملاء:</label>
+                    <textarea name="human_handoff_message" rows="2" class="form-control" required>{{ settings.get('human_handoff_message', '') }}</textarea>
+                </div>
+
+                <div class="form-check form-switch mt-3">
+                    <input class="form-check-input" type="checkbox" name="bot_enabled" value="true" id="botEnabledToggle" {% if settings.get('bot_enabled', 'true') == 'true' %}checked{% endif %}>
+                    <label class="form-check-label fw-bold" for="botEnabledToggle">
+                        تفعيل البوت الذكي للرد على رسائل الصفحة
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Store Information -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h5 class="card-title mb-3"><i class="bi bi-info-circle text-primary" aria-hidden="true"></i> معلومات المتجر</h5>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">اسم المتجر:</label>
+                    <input type="text" name="store_name" class="form-control" value="{{ settings.get('store_name', 'متجر التقوى') }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">نبذة عن المتجر وجودة المنتجات:</label>
+                    <textarea name="store_description" rows="3" class="form-control">{{ settings.get('store_description', '') }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">أوقات وساعات العمل:</label>
+                    <input type="text" name="working_hours" class="form-control" value="{{ settings.get('working_hours', '') }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">سياسة الاستبدال والإرجاع:</label>
+                    <textarea name="return_policy" rows="3" class="form-control">{{ settings.get('return_policy', '') }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="s-delivery-fee">رسوم التوصيل (دينار) لكل المحافظات:</label>
+                    <input type="number" id="s-delivery-fee" name="delivery_fee_jod" class="form-control" style="max-width: 160px;" min="0" step="0.001" value="{{ settings.get('delivery_fee_jod', default_delivery_fee) }}" required>
+                    <small class="text-secondary">الرسوم التي تأخذها شركة التوصيل، ويضيفها البوت إلى مجموع الطلب.</small>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Storefront identity & copy -->
+        <div class="col-12">
+            <div class="card p-4">
+                <h5 class="card-title mb-1"><i class="bi bi-shop text-primary" aria-hidden="true"></i> واجهة المتجر والهوية</h5>
+                <p class="text-secondary small mb-3">النصوص التي تظهر في المتجر العام وفي ترويسة لوحة التحكم. اترك الحقل الاختياري فارغاً لإخفائه.</p>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" for="s-tagline">الوصف المختصر بجانب الاسم:</label>
+                        <input type="text" id="s-tagline" name="store_tagline" class="form-control" value="{{ sf('store_tagline') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold" for="s-badge">شارة الترويسة:</label>
+                        <input type="text" id="s-badge" name="sf_header_badge" class="form-control" value="{{ sf('sf_header_badge') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold" for="s-seal">ختم الشارة:</label>
+                        <input type="text" id="s-seal" name="sf_header_seal" class="form-control" value="{{ sf('sf_header_seal') }}">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold" for="s-pill">السطر الصغير فوق العنوان الرئيسي:</label>
+                        <input type="text" id="s-pill" name="sf_hero_pill" class="form-control" value="{{ sf('sf_hero_pill') }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" for="s-title-gold">العنوان الرئيسي (الجزء الذهبي): <span class="text-danger">*</span></label>
+                        <input type="text" id="s-title-gold" name="sf_hero_title_gold" class="form-control" value="{{ sf('sf_hero_title_gold') }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" for="s-title-white">تكملة العنوان (الجزء الأبيض):</label>
+                        <input type="text" id="s-title-white" name="sf_hero_title_white" class="form-control" value="{{ sf('sf_hero_title_white') }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold" for="s-subtitle">النص التعريفي تحت العنوان:</label>
+                        <textarea id="s-subtitle" name="sf_hero_subtitle" rows="2" class="form-control">{{ sf('sf_hero_subtitle') }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" for="s-badges">شارات الثقة (كل شارة في سطر):</label>
+                        <textarea id="s-badges" name="sf_trust_badges" rows="4" class="form-control">{{ sf('sf_trust_badges') }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" for="s-footer">نبذة التذييل:</label>
+                        <textarea id="s-footer" name="sf_footer_about" rows="4" class="form-control">{{ sf('sf_footer_about') }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" for="s-cta">نص زر الطلب على المنتجات: <span class="text-danger">*</span></label>
+                        <input type="text" id="s-cta" name="sf_cta_label" class="form-control" value="{{ sf('sf_cta_label') }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" for="s-location">الموقع (يظهر في التذييل):</label>
+                        <input type="text" id="s-location" name="sf_location" class="form-control" value="{{ sf('sf_location') }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Keys (Masked) -->
+        <div class="col-12">
+            <div class="card p-4">
+                <h5 class="card-title mb-2"><i class="bi bi-key text-primary" aria-hidden="true"></i> مفاتيح وتكاملات المنصات (للقراءة فقط)</h5>
+                <p class="text-secondary small mb-3">يتم قراءة هذه المفاتيح تلقائياً وبأمان من متغيرات البيئة (Cloud Secret Manager)</p>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small text-secondary">Gemini API Key:</label>
+                        <input type="text" class="form-control form-control-sm font-monospace bg-dark text-light" value="{{ masked_keys.gemini_api_key }}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-secondary">Meta Page Access Token:</label>
+                        <input type="text" class="form-control form-control-sm font-monospace bg-dark text-light" value="{{ masked_keys.meta_page_access_token }}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-secondary">Meta App Secret:</label>
+                        <input type="text" class="form-control form-control-sm font-monospace bg-dark text-light" value="{{ masked_keys.meta_app_secret }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Telegram Bot Token:</label>
+                        <input type="text" class="form-control form-control-sm font-monospace bg-dark text-light" value="{{ masked_keys.telegram_bot_token }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Telegram Chat ID (التقرير اليومي):</label>
+                        <input type="text" class="form-control form-control-sm font-monospace bg-dark text-light" value="{{ masked_keys.telegram_chat_id }}" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="col-12 text-end">
+            <button type="submit" class="btn btn-primary px-5 py-2 fs-5 btn-mobile-block">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i> حفظ كافة الإعدادات
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

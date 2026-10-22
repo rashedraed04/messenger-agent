@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% set active_page = "faqs" %}
+
+{% block title %}الأسئلة الشائعة{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">❓ الأسئلة الشائعة (معلومات البوت)</h1>
+        <p class="text-secondary mb-0">هذه الأسئلة والأجوبة تُحقن مباشرة في عقل البوت الذكي ليجيب الزبائن بدقة وأمانة</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#newFaqForm">
+        ➕ إضافة سؤال جديد
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Add FAQ Form (Collapse) -->
+<div class="collapse mb-4" id="newFaqForm">
+    <div class="card p-4">
+        <h5 class="card-title mb-3">➕ إضافة سؤال وإجابة جديدة</h5>
+        <form method="post" action="/dashboard/faqs/new">
+            {{ csrf_input(request) }}
+            <div class="mb-3">
+                <label class="form-label">السؤال المتكرر من الزبائن <span class="text-danger">*</span></label>
+                <input type="text" name="question_ar" class="form-control" placeholder="مثال: هل المنتجات أصلية؟ أو كم مدة التوصيل لإربد؟" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">الإجابة المعتمدة التي سيقولها البوت <span class="text-danger">*</span></label>
+                <textarea name="answer_ar" rows="3" class="form-control" placeholder="اكتب الإجابة بلهجة أردنية ودية وصريحة..." required></textarea>
+            </div>
+            <div class="row align-items-center mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">الترتيب:</label>
+                    <input type="number" name="sort_order" class="form-control form-control-sm" value="0">
+                </div>
+                <div class="col-md-6 mt-4">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="is_active" value="true" checked id="faqNewActive">
+                        <label class="form-check-label" for="faqNewActive">تفعيل السؤال</label>
+                    </div>
+                </div>
+            </div>
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary">حفظ السؤال</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- FAQs List -->
+<div class="card p-3">
+    {% if faqs %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th style="width: 35%;">السؤال</th>
+                    <th>الإجابة</th>
+                    <th style="width: 100px;">الحالة</th>
+                    <th class="text-end" style="width: 120px;">حذف</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in faqs %}
+                <tr>
+                    <td class="fw-bold">❓ {{ f.question_ar }}</td>
+                    <td>{{ f.answer_ar }}</td>
+                    <td>
+                        {% if f.is_active %}
+                        <span class="badge bg-success">نشط</span>
+                        {% else %}
+                        <span class="badge bg-secondary">معطل</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <form action="/dashboard/faqs/{{ f.id }}/delete" method="post" class="d-inline" onsubmit="return confirm('هل تريد حذف هذا السؤال؟');">
+                            {{ csrf_input(request) }}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                🗑️ حذف
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-secondary">
+        <h5>لا توجد أسئلة شائعة مسجلة</h5>
+        <p>أضف أسئلة مثل: طرق الدفع، سياسة الاستبدال، ومدد التوصيل.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

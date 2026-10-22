@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% set active_page = "product_types" %}
+
+{% block title %}أنواع المنتجات{% endblock %}
+
+{% block page_header %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="page-title">أنواع المنتجات</h1>
+        <p class="page-subtitle mb-0">كل نوع يحدد حقول نموذج المنتج والرسم الذي يظهر في المتجر عند عدم وجود صورة</p>
+    </div>
+    <a href="/dashboard/products" class="btn btn-outline-secondary"><i class="bi bi-arrow-right" aria-hidden="true"></i> العودة للمنتجات</a>
+</div>
+{% endblock %}
+
+{% block content %}
+{% set messages = {
+    'created': 'تمت إضافة النوع بنجاح.',
+    'updated': 'تم حفظ التعديلات.',
+    'reordered': 'تم تغيير الترتيب.',
+    'deleted': 'تم حذف النوع.',
+} %}
+{% set errors = {
+    'invalid_name': 'اسم النوع مطلوب (حتى ' ~ max_name_length ~ ' حرفاً) والعناوين حتى ' ~ max_label_length ~ ' حرفاً.',
+    'duplicate': 'يوجد نوع بنفس الاسم.',
+    'in_use': 'لا يمكن حذف نوع مستخدم في منتجات. غيّر نوع تلك المنتجات أولاً، أو أخفِ النوع من فلتر المتجر.',
+    'not_found': 'النوع غير موجود.',
+    'not_ready': 'جدول الأنواع غير موجود في قاعدة البيانات بعد. شغّل ملف الترحيل migrations/004_product_types.sql.',
+} %}
+
+{% if msg in messages %}
+<div class="alert alert-success" role="status"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> {{ messages[msg] }}</div>
+{% endif %}
+{% if error in errors %}
+<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> {{ errors[error] }}</div>
+{% endif %}
+
+{% if not table_ready %}
+<div class="alert alert-warning" role="alert">
+    جدول الأنواع (<code>product_types</code>) غير موجود في قاعدة البيانات، لذلك تُعرض الأنواع الافتراضية فقط ولا يمكن تعديلها.
+    شغّل ملف الترحيل <code>migrations/004_product_types.sql</code> في Supabase (SQL Editor) لتفعيل إدارة الأنواع.
+</div>
+{% endif %}
+
+{% macro type_fields(t, prefix) %}
+<div class="mb-3">
+    <label class="form-label" for="{{ prefix }}-name">اسم النوع</label>
+    <input type="text" id="{{ prefix }}-name" name="name_ar" class="form-control" maxlength="{{ max_name_length }}" required
+           value="{{ t.name_ar if t else '' }}" placeholder="مثال: سجاد صلاة" {% if not table_ready %}disabled{% endif %}>
+</div>
+<div class="mb-3">
+    <span class="form-label d-block">الرسم في المتجر</span>
+    <div class="visual-picker">
+        {% for key, label in visuals.items() %}
+        <label class="visual-option" title="{{ label }}">
+            <input type="radio" name="visual" value="{{ key }}" {% if (t.visual if t else 'gift') == key %}checked{% endif %} {% if not table_ready %}disabled{% endif %}>
+            <span><i class="bi {{ type_icons[key] }}" aria-hidden="true"></i> {{ label }}</span>
+        </label>
+        {% endfor %}
+    </div>
+</div>
+<div class="row g-2 mb-3">
+    <div class="col-7">
+        <label class="form-label" for="{{ prefix }}-size">عنوان حقل الحجم</label>
+        <input type="text" id="{{ prefix }}-size" name="size_label" class="form-control" maxlength="{{ max_label_length }}"
+               value="{{ t.size_label or '' if t else '' }}" placeholder="مثال: المقاس" {% if not table_ready %}disabled{% endif %}>
+    </div>
+    <div class="col-5">
+        <label class="form-label" for="{{ prefix }}-unit">الوحدة</label>
+        <input type="text" id="{{ prefix }}-unit" name="size_unit" class="form-control" maxlength="{{ max_label_length }}"
+               value="{{ t.size_unit or '' if t else '' }}" placeholder="سم، مل..." {% if not table_ready %}disabled{% endif %}>
+    </div>
+    <div class="col-12"><small class="text-secondary">اترك عنوان الحجم فارغاً إذا كان النوع بلا حجم (مثل الهدايا).</small></div>
+</div>
+<div class="mb-3">
+    <label class="form-label" for="{{ prefix }}-details">عنوان المميزات</label>
+    <input type="text" id="{{ prefix }}-details" name="details_label" class="form-control" maxlength="{{ max_label_length }}"
+           value="{{ t.details_label if t else 'المميزات' }}" placeholder="المميزات" {% if not table_ready %}disabled{% endif %}>
+</div>
+{% endmacro %}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header py-3"><span class="card-title-gold"><i class="bi bi-plus-lg" aria-hidden="true"></i> إضافة نوع جديد</span></div>
+            <div class="card-body">
+                <form method="post" action="/dashboard/product-types/new">
+                    {{ csrf_input(request) }}
+                    {{ type_fields(None, 'new') }}
+                    <button type="submit" class="btn btn-primary w-100" {% if not table_ready %}disabled{% endif %}>إضافة النوع</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        {% for t in types %}
+        {% set used = product_counts.get(t.name_ar, 0) %}
+        <div class="card mb-3 type-row">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                <div class="type-row-icon"><i class="bi {{ type_icons.get(t.visual, 'bi-gift') }}" aria-hidden="true"></i></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="fw-bold">{{ t.name_ar }}</div>
+                    <div class="small text-secondary">
+                        {% if t.size_label %}{{ t.size_label }}{% if t.size_unit %} ({{ t.size_unit }}){% endif %}{% else %}بدون حجم{% endif %}
+                        · {{ t.details_label }}
+                        · <a href="/dashboard/products?product_type={{ t.name_ar | urlencode }}" class="text-decoration-none">{{ used }} منتج</a>
+                        · {% if t.show_in_filter %}<span class="text-success">ظاهر في المتجر</span>{% else %}<span>مخفي من الفلتر</span>{% endif %}
+                    </div>
+                </div>
+                {% if table_ready %}
+                <div class="d-flex flex-wrap gap-1 row-actions">
+                    <form method="post" action="/dashboard/product-types/{{ t.id }}/move">
+                        {{ csrf_input(request) }}
+                        <input type="hidden" name="direction" value="up">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="تحريك للأعلى" {% if loop.first %}disabled{% endif %}><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+                    </form>
+                    <form method="post" action="/dashboard/product-types/{{ t.id }}/move">
+                        {{ csrf_input(request) }}
+                        <input type="hidden" name="direction" value="down">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="تحريك للأسفل" {% if loop.last %}disabled{% endif %}><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
+                    </form>
+                    <form method="post" action="/dashboard/product-types/{{ t.id }}/visibility">
+                        {{ csrf_input(request) }}
+                        <input type="hidden" name="show_in_filter" value="{{ 'false' if t.show_in_filter else 'true' }}">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi {{ 'bi-eye-slash' if t.show_in_filter else 'bi-eye' }}" aria-hidden="true"></i> {{ 'إخفاء' if t.show_in_filter else 'إظهار' }}
+                        </button>
+                    </form>
+                    <form method="post" action="/dashboard/product-types/{{ t.id }}/delete"
+                          data-type-name="{{ t.name_ar }}"
+                          onsubmit="return confirm('هل تريد حذف النوع «' + this.dataset.typeName + '»؟');">
+                        {{ csrf_input(request) }}
+                        <button type="submit" class="btn btn-sm btn-outline-danger" {% if used %}disabled title="مستخدم في {{ used }} منتج"{% endif %}>
+                            <i class="bi bi-trash" aria-hidden="true"></i> حذف
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% if table_ready %}
+            <details class="type-edit">
+                <summary><i class="bi bi-pencil" aria-hidden="true"></i> تعديل</summary>
+                <form method="post" action="/dashboard/product-types/{{ t.id }}/edit" class="pt-3">
+                    {{ csrf_input(request) }}
+                    {{ type_fields(t, 'edit-' ~ loop.index) }}
+                    <button type="submit" class="btn btn-primary btn-mobile-block">حفظ التعديلات</button>
+                </form>
+            </details>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="card text-center py-5 text-secondary">
+            <h5>لا توجد أنواع</h5>
+            <p class="mb-0">أضف أول نوع من النموذج.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

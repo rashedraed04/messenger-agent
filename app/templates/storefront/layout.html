@@ -1,0 +1,98 @@
+{% from "storefront/_macros.html" import palm_drop %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0d">
+    <meta name="description" content="{% block meta_description %}{{ store_desc }}{% endblock %}">
+    <title>{% block title %}{{ brand.store_name }}{% if brand.store_tagline %} | {{ brand.store_tagline }}{% endif %}{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='img/logo.png') }}">
+
+    <!-- Google Fonts — IBM Plex Sans Arabic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Storefront Styles -->
+    <link href="{{ url_for('static', path='css/storefront.css') }}" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Top Sticky Navbar -->
+    <header class="store-navbar">
+        <div class="container d-flex justify-content-between align-items-center gap-2">
+            <a href="/" class="navbar-brand-text">
+                <img src="{{ url_for('static', path='img/logo.png') }}" alt="شعار {{ brand.store_name }}" class="brand-logo" width="52" height="52">
+                <span class="brand-words">
+                    <span class="brand-name">{{ brand.store_name }}</span>
+                    {% if brand.store_tagline %}<span class="brand-tagline">{{ brand.store_tagline }}</span>{% endif %}
+                </span>
+            </a>
+
+            {% if brand.sf_header_badge %}
+            <div class="brand-badge d-none d-lg-inline-flex">
+                {{ palm_drop(14) }}
+                <span>{{ brand.sf_header_badge }}</span>
+                {% if brand.sf_header_seal %}<span class="brand-badge-seal">{{ brand.sf_header_seal }}</span>{% endif %}
+            </div>
+            {% endif %}
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="https://m.me/{{ facebook_page_id }}" target="_blank" rel="noopener noreferrer" class="btn-nav-gold" aria-label="تواصل عبر ماسنجر">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.91 1.455 5.512 3.734 7.21v3.532l3.418-1.875c.915.253 1.884.39 2.848.39 5.523 0 10-4.145 10-9.257C22 6.145 17.523 2 12 2zm1.004 12.443l-2.548-2.72-4.97 2.72 5.467-5.803 2.613 2.72 4.905-2.72-5.467 5.803z"/>
+                    </svg>
+                    <span>تواصل عبر ماسنجر</span>
+                </a>
+
+                <a href="/dashboard" class="btn-nav-ghost d-none d-md-inline-flex" title="دخول لوحة الإدارة">
+                    <i class="bi bi-lock-fill" aria-hidden="true"></i> الإدارة
+                </a>
+            </div>
+        </div>
+    </header>
+
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer class="store-footer">
+        <div class="container">
+            <div class="row g-4 align-items-center">
+                <div class="col-md-7">
+                    <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start text-center text-md-start">
+                        <img src="{{ url_for('static', path='img/logo.png') }}" alt="" class="brand-logo brand-logo-sm" width="44" height="44">
+                        <div>
+                            <h5 class="footer-brand mb-1">{{ brand.full_name }}</h5>
+                            {% if brand.sf_footer_about %}<p class="mb-0 small">{{ brand.sf_footer_about }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="d-flex flex-wrap justify-content-center justify-content-md-end gap-2">
+                        <a href="https://m.me/{{ facebook_page_id }}" target="_blank" rel="noopener noreferrer" class="footer-chip"><i class="bi bi-messenger" aria-hidden="true"></i> دعم العملاء السريع</a>
+                        <span class="footer-chip"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i> شحن لكافة المحافظات</span>
+                        <a href="/dashboard" class="footer-chip"><i class="bi bi-lock-fill" aria-hidden="true"></i> لوحة الإدارة</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <span>جميع الحقوق محفوظة © 2026 {{ brand.full_name }}{% if brand.sf_location %} — {{ brand.sf_location }}{% endif %}</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

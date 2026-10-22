@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}خطأ في الخادم{% endblock %}
+
+{% block body %}
+<div class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="text-center">
+        <h1 class="display-1 text-danger">500</h1>
+        <h2 class="mb-3">خطأ في الخادم</h2>
+        <p class="text-secondary mb-4">عذراً، حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.</p>
+        <a href="/dashboard" class="btn btn-primary">العودة للرئيسية</a>
+    </div>
+</div>
+{% endblock %}

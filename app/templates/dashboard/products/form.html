@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% set active_page = "products" %}
+
+{% block title %}{{ "تعديل منتج" if is_edit else "إضافة منتج جديد" }}{% endblock %}
+
+{% block page_header %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="page-title">{{ "تعديل منتج" if is_edit else "إضافة منتج جديد" }}</h1>
+        <p class="page-subtitle mb-0">اختر نوع المنتج أولاً، وستتغير الحقول لتناسبه</p>
+    </div>
+    <a href="/dashboard/products" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-right" aria-hidden="true"></i> العودة للقائمة
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+{% set current_type = product.product_type if product else '' %}
+{% if not current_type and product and product.size_ml %}{% set current_type = (product_types | selectattr("visual", "equalto", "bottle") | map(attribute="name_ar") | first) or '' %}{% endif %}
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <form method="post" action="{{ '/dashboard/products/' ~ product.id ~ '/edit' if is_edit else '/dashboard/products/new' }}" id="product-form">
+            {{ csrf_input(request) }}
+
+            <!-- Step 1: product type -->
+            <div class="card p-3 p-md-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h6 mb-0 card-title-gold"><i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i> نوع المنتج <span class="text-danger">*</span></h2>
+                    <a href="/dashboard/product-types" class="small text-decoration-none">إدارة الأنواع</a>
+                </div>
+                {% if not product_types %}
+                <p class="text-secondary small mb-2">
+                    لا توجد أنواع منتجات بعد. <a href="/dashboard/product-types">أضف نوعاً</a> لتظهر الحقول المناسبة لكل منتج.
+                </p>
+                {% endif %}
+                <div class="type-picker" role="radiogroup" aria-label="نوع المنتج">
+                    {% for t in product_types %}
+                    <label class="type-tile">
+                        <input type="radio" name="product_type" value="{{ t.name_ar }}" required
+                               data-size-label="{{ t.size_label or '' }}"
+                               data-size-unit="{{ t.size_unit or '' }}"
+                               data-details-label="{{ t.details_label or 'المميزات' }}"
+                               {% if current_type == t.name_ar %}checked{% endif %}>
+                        <span class="type-tile-body">
+                            <i class="bi {{ type_icons.get(t.visual, 'bi-gift') }}" aria-hidden="true"></i>
+                            <span>{{ t.name_ar }}</span>
+                        </span>
+                    </label>
+                    {% endfor %}
+                    {% if current_type and current_type not in (product_types | map(attribute="name_ar") | list) %}
+                    <label class="type-tile">
+                        <input type="radio" name="product_type" value="{{ current_type }}" checked data-size-label="الحجم" data-size-unit="" data-details-label="المميزات">
+                        <span class="type-tile-body"><i class="bi bi-question-circle" aria-hidden="true"></i><span>{{ current_type }} (محذوف)</span></span>
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Step 2: details -->
+            <div class="card p-3 p-md-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="f-name-ar">اسم المنتج بالعربي <span class="text-danger">*</span></label>
+                        <input type="text" id="f-name-ar" name="name_ar" class="form-control" required value="{{ product.name_ar if product else '' }}" placeholder="مثال: سجادة صلاة تركية فاخرة">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="f-name-en">الاسم بالإنجليزية (اختياري)</label>
+                        <input type="text" id="f-name-en" name="name_en" class="form-control" dir="ltr" value="{{ product.name_en if product else '' }}" placeholder="Turkish Prayer Rug">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label" for="f-brand">الماركة / المصدر (اختياري)</label>
+                        <input type="text" id="f-brand" name="brand" class="form-control" value="{{ product.brand if product else '' }}" placeholder="مثال: صناعة تركية">
+                    </div>
+
+                    <div class="col-md-4" id="size-field">
+                        <label class="form-label" for="f-size"><span id="size-label">الحجم</span> <span class="text-secondary" id="size-unit-hint"></span></label>
+                        <input type="text" id="f-size" name="size_ml" class="form-control" value="{{ product.size_ml if product and product.size_ml else '' }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label" for="product-category">الفئة <span class="text-danger">*</span></label>
+                        {% set current_category = product.category if product else '' %}
+                        <select name="category" id="product-category" class="form-select" required>
+                            <option value="" disabled {% if not current_category %}selected{% endif %}>اختر الفئة...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                            {% if current_category and current_category not in categories %}
+                            <option value="{{ current_category }}" selected>{{ current_category }} (غير موجودة في قائمة الفئات)</option>
+                            {% endif %}
+                        </select>
+                        <div class="form-text">
+                            <a href="/dashboard/categories" class="text-decoration-none">إدارة الفئات</a>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <label class="form-label" for="f-price">السعر (د.أ) <span class="text-danger">*</span></label>
+                        <input type="number" id="f-price" step="0.001" min="0" name="price_jod" class="form-control" inputmode="decimal" required value="{{ product.price_jod if product else '' }}" placeholder="45.000">
+                        <small class="text-secondary">لا يظهر السعر في المتجر العام</small>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="f-tags"><span id="details-label">المميزات</span> (مفصولة بفواصل)</label>
+                        <input type="text" id="f-tags" name="tags" class="form-control" value="{{ product.tags if product else '' }}" placeholder="هدية, فاخر, مناسب للحجاج">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="f-desc">وصف المنتج</label>
+                        <textarea id="f-desc" name="description_ar" rows="3" class="form-control" placeholder="وصف قصير يظهر للزبائن ويستخدمه البوت للتعريف بالمنتج...">{{ product.description_ar if product else '' }}</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="f-image">رابط صورة المنتج (اختياري)</label>
+                        <input type="url" id="f-image" name="image_url" class="form-control" dir="ltr" value="{{ product.image_url if product and product.image_url else '' }}" placeholder="https://example.com/product.jpg">
+                        <small class="text-secondary">إذا تُرك فارغاً يظهر رسم ذهبي حسب نوع المنتج.</small>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" name="is_active" value="true" id="productIsActive" {% if not product or product.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="productIsActive">
+                                تفعيل المنتج (متاح للبيع واقتراح البوت)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary px-4 btn-mobile-block">
+                            <i class="bi bi-check2-circle" aria-hidden="true"></i> {{ "حفظ التعديلات" if is_edit else "إضافة المنتج" }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Adapt the size and details fields to the selected product type
+    (function () {
+        var form = document.getElementById('product-form');
+        var sizeField = document.getElementById('size-field');
+        var sizeInput = document.getElementById('f-size');
+        var sizeLabel = document.getElementById('size-label');
+        var unitHint = document.getElementById('size-unit-hint');
+        var detailsLabel = document.getElementById('details-label');
+
+        function apply() {
+            var picked = form.querySelector('input[name="product_type"]:checked');
+            if (!picked) {
+                sizeField.hidden = false;
+                return;
+            }
+            var label = picked.dataset.sizeLabel;
+            sizeField.hidden = !label;
+            sizeInput.disabled = !label;
+            sizeLabel.textContent = label || 'الحجم';
+            unitHint.textContent = picked.dataset.sizeUnit ? '(' + picked.dataset.sizeUnit + ')' : '';
+            detailsLabel.textContent = picked.dataset.detailsLabel || 'المميزات';
+        }
+
+        form.addEventListener('change', function (e) {
+            if (e.target.name === 'product_type') apply();
+        });
+        apply();
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% set active_page = "account" %}
+
+{% block title %}الحساب والأمان{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">الحساب والأمان</h1>
+        <p class="page-subtitle mb-0">تغيير البريد الإلكتروني وكلمة المرور الخاصة بدخول لوحة التحكم</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if notice %}
+<div class="alert alert-success" role="status" id="account-notice"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> {{ notice }}</div>
+{% endif %}
+{% if user.is_dev %}
+<div class="alert alert-warning" role="status">
+    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+    أنت مسجل بحساب تجريبي محلي. سجّل الدخول بحساب Supabase حقيقي لتتمكن من تغيير البريد وكلمة المرور.
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <!-- Change email -->
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h5 class="card-title mb-3"><i class="bi bi-envelope-at-fill text-primary" aria-hidden="true"></i> البريد الإلكتروني</h5>
+
+            <div class="mb-3">
+                <div class="text-secondary small">البريد الحالي</div>
+                <div class="fw-bold" dir="ltr" style="text-align: right;" id="current-email">{{ user.email }}</div>
+            </div>
+            {% if user.new_email %}
+            <div class="alert alert-info small" role="status" id="pending-email">
+                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                بانتظار التأكيد: <span dir="ltr">{{ user.new_email }}</span> — افتح رابط التأكيد المرسل إلى بريدك.
+            </div>
+            {% endif %}
+
+            {% if email_error %}
+            <div class="alert alert-danger" role="alert" id="email-error">{{ email_error }}</div>
+            {% endif %}
+
+            <form method="post" action="/dashboard/account/email" id="email-form">
+                {{ csrf_input(request) }}
+                <div class="mb-3">
+                    <label for="new_email" class="form-label fw-bold">البريد الإلكتروني الجديد:</label>
+                    <input type="email" class="form-control" id="new_email" name="new_email" dir="ltr"
+                           maxlength="254" placeholder="name@gmail.com" value="{{ new_email_value or '' }}"
+                           autocomplete="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="email_current_password" class="form-label fw-bold">كلمة المرور الحالية:</label>
+                    <input type="password" class="form-control" id="email_current_password" name="current_password"
+                           autocomplete="current-password" required>
+                </div>
+                <small class="text-secondary d-block mb-3">
+                    سنرسل رابط تأكيد مجاني إلى بريدك الجديد (وإلى الحالي أيضاً للحماية). لن يتغير البريد
+                    إلا بعد الضغط على الرابط، وهذا يثبت أنك تملك البريد الجديد.
+                </small>
+                <button type="submit" class="btn btn-primary" id="btn-change-email" {% if user.is_dev %}disabled{% endif %}>
+                    <i class="bi bi-send-fill" aria-hidden="true"></i> إرسال رابط التأكيد
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change password -->
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h5 class="card-title mb-3"><i class="bi bi-key-fill text-primary" aria-hidden="true"></i> كلمة المرور</h5>
+
+            {% if password_error %}
+            <div class="alert alert-danger" role="alert" id="password-error">{{ password_error }}</div>
+            {% endif %}
+
+            <form method="post" action="/dashboard/account/password" id="password-form">
+                {{ csrf_input(request) }}
+                <div class="mb-3">
+                    <label for="current_password" class="form-label fw-bold">كلمة المرور الحالية:</label>
+                    <input type="password" class="form-control" id="current_password" name="current_password"
+                           autocomplete="current-password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="new_password" class="form-label fw-bold">كلمة المرور الجديدة:</label>
+                    <input type="password" class="form-control" id="new_password" name="new_password"
+                           minlength="8" maxlength="72" autocomplete="new-password" required>
+                    <small class="text-secondary">8 أحرف على الأقل، وتحتوي على أحرف وأرقام.</small>
+                </div>
+                <div class="mb-3">
+                    <label for="confirm_password" class="form-label fw-bold">تأكيد كلمة المرور الجديدة:</label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                           minlength="8" maxlength="72" autocomplete="new-password" required>
+                </div>
+                <small class="text-secondary d-block mb-3">
+                    بعد التغيير سيتم تسجيل الخروج من جميع الأجهزة الأخرى. نسيت كلمة المرور الحالية؟
+                    سجّل الخروج واستخدم «نسيت كلمة المرور؟» في صفحة الدخول.
+                </small>
+                <button type="submit" class="btn btn-primary" id="btn-change-password" {% if user.is_dev %}disabled{% endif %}>
+                    <i class="bi bi-shield-check" aria-hidden="true"></i> تغيير كلمة المرور
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

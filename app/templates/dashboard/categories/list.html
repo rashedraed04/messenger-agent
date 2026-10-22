@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% set active_page = "categories" %}
+
+{% block title %}الفئات{% endblock %}
+
+{% block page_header %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="page-title">فئات المنتجات</h1>
+        <p class="page-subtitle mb-0">أضف الفئات وعدّل أسماءها وترتيبها وحدد ما يظهر منها كفلتر في المتجر العام</p>
+    </div>
+    <a href="/dashboard/products" class="btn btn-outline-secondary"><i class="bi bi-arrow-right" aria-hidden="true"></i> العودة للمنتجات</a>
+</div>
+{% endblock %}
+
+{% block content %}
+{% set messages = {
+    'created': 'تمت إضافة الفئة بنجاح.',
+    'updated': 'تم تحديث ظهور الفئة في المتجر.',
+    'renamed': 'تم تغيير اسم الفئة وتحديث المنتجات المرتبطة بها.',
+    'reordered': 'تم تغيير الترتيب.',
+    'deleted': 'تم حذف الفئة.',
+} %}
+{% set errors = {
+    'invalid_name': 'اسم الفئة مطلوب ويجب ألا يتجاوز ' ~ max_name_length ~ ' حرفاً.',
+    'duplicate': 'هذه الفئة موجودة مسبقاً.',
+    'in_use': 'لا يمكن حذف فئة مستخدمة في منتجات. انقل المنتجات لفئة أخرى أولاً، أو أخفِ الفئة من فلتر المتجر.',
+    'not_found': 'الفئة غير موجودة.',
+    'not_ready': 'جدول الفئات غير موجود في قاعدة البيانات بعد. شغّل ملف الترحيل migrations/003_product_categories.sql.',
+} %}
+
+{% if msg in messages %}
+<div class="alert alert-success" role="status"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> {{ messages[msg] }}</div>
+{% endif %}
+{% if error in errors %}
+<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> {{ errors[error] }}</div>
+{% endif %}
+
+{% if not table_ready %}
+<div class="alert alert-warning" role="alert">
+    ⚠️ جدول الفئات (<code>product_categories</code>) غير موجود في قاعدة البيانات، لذلك تُعرض الفئات الافتراضية فقط ولا يمكن تعديلها.
+    شغّل ملف الترحيل <code>migrations/003_product_categories.sql</code> في Supabase لتفعيل إدارة الفئات.
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header py-3"><span class="card-title-gold"><i class="bi bi-plus-lg" aria-hidden="true"></i> إضافة فئة جديدة</span></div>
+            <div class="card-body">
+                <form method="post" action="/dashboard/categories/new">
+                    {{ csrf_input(request) }}
+                    <label for="category-name" class="form-label">اسم الفئة</label>
+                    <input type="text" id="category-name" name="name_ar" class="form-control mb-3"
+                           maxlength="{{ max_name_length }}" placeholder="مثال: هدايا الحج" required
+                           {% if not table_ready %}disabled{% endif %}>
+                    <button type="submit" class="btn btn-primary w-100" {% if not table_ready %}disabled{% endif %}>
+                        إضافة الفئة
+                    </button>
+                </form>
+                <p class="text-secondary small mt-3 mb-0">
+                    الفئات الظاهرة تُعرض كأزرار تصفية في الصفحة الرئيسية للمتجر، وتظهر جميع الفئات في نموذج إضافة/تعديل المنتج.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        {% for c in categories %}
+        {% set used = product_counts.get(c.name_ar, 0) %}
+        <div class="card mb-3 type-row">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                <div class="type-row-icon"><i class="bi bi-tag-fill" aria-hidden="true"></i></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="fw-bold">{{ c.name_ar }}</div>
+                    <div class="small text-secondary">
+                        <a href="/dashboard/products?category={{ c.name_ar | urlencode }}" class="text-decoration-none">{{ used }} منتج</a>
+                        · {% if c.show_in_filter %}<span class="text-success">ظاهرة في فلتر المتجر</span>{% else %}<span>مخفية من الفلتر</span>{% endif %}
+                    </div>
+                </div>
+                {% if table_ready %}
+                <div class="d-flex flex-wrap gap-1 row-actions">
+                    <form method="post" action="/dashboard/categories/{{ c.id }}/move">
+                        {{ csrf_input(request) }}
+                        <input type="hidden" name="direction" value="up">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="تحريك للأعلى" {% if loop.first %}disabled{% endif %}><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+                    </form>
+                    <form method="post" action="/dashboard/categories/{{ c.id }}/move">
+                        {{ csrf_input(request) }}
+                        <input type="hidden" name="direction" value="down">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="تحريك للأسفل" {% if loop.last %}disabled{% endif %}><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
+                    </form>
+                    <form method="post" action="/dashboard/categories/{{ c.id }}/visibility">
+                        {{ csrf_input(request) }}
+                        <input type="hidden" name="show_in_filter" value="{{ 'false' if c.show_in_filter else 'true' }}">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi {{ 'bi-eye-slash' if c.show_in_filter else 'bi-eye' }}" aria-hidden="true"></i> {{ 'إخفاء من الفلتر' if c.show_in_filter else 'إظهار في الفلتر' }}
+                        </button>
+                    </form>
+                    <form method="post" action="/dashboard/categories/{{ c.id }}/delete"
+                          data-category-name="{{ c.name_ar }}"
+                          onsubmit="return confirm('هل تريد حذف الفئة «' + this.dataset.categoryName + '»؟');">
+                        {{ csrf_input(request) }}
+                        <button type="submit" class="btn btn-sm btn-outline-danger" {% if used %}disabled title="مستخدمة في {{ used }} منتج"{% endif %}>
+                            <i class="bi bi-trash" aria-hidden="true"></i> حذف
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% if table_ready %}
+            <details class="type-edit">
+                <summary><i class="bi bi-pencil" aria-hidden="true"></i> تغيير الاسم</summary>
+                <form method="post" action="/dashboard/categories/{{ c.id }}/rename" class="pt-3 d-flex flex-wrap gap-2">
+                    {{ csrf_input(request) }}
+                    <input type="text" name="name_ar" class="form-control flex-grow-1 w-auto" maxlength="{{ max_name_length }}" value="{{ c.name_ar }}" required aria-label="الاسم الجديد">
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </form>
+                <small class="text-secondary d-block mt-2">المنتجات المرتبطة بهذه الفئة ستنتقل للاسم الجديد تلقائياً.</small>
+            </details>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="card text-center py-5 text-secondary">
+            <h5>لا توجد فئات</h5>
+            <p class="mb-0">أضف أول فئة من النموذج.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

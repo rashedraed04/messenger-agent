@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% set active_page = "overview" %}
+
+{% block title %}الرئيسية{% endblock %}
+
+{% block page_header %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h1 class="page-title">لوحة التحكم الرئيسية</h1>
+        <div class="page-subtitle">آخر الطلبات واختصارات سريعة</div>
+    </div>
+    <span class="date-chip"><i class="bi bi-calendar2-check" aria-hidden="true"></i> <span id="today-date">اليوم</span></span>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if db_warning %}
+<div class="alert alert-warning">{{ db_warning }}</div>
+{% endif %}
+
+<div class="row g-4">
+    <!-- Recent Orders -->
+    <div class="col-lg-8">
+        <div class="card glass-panel h-100">
+            <div class="card-header d-flex justify-content-between align-items-center py-3 px-4">
+                <span class="card-title-gold"><i class="bi bi-box-seam-fill" aria-hidden="true"></i> آخر الطلبات</span>
+                <a href="/dashboard/reports" class="btn btn-sm btn-gold-outline px-3 py-1">التقرير اليومي</a>
+            </div>
+            <div class="card-body p-0 px-3">
+                <div class="table-responsive">
+                    <table class="table mb-0" id="recent-orders-table">
+                        <thead>
+                            <tr>
+                                <th>رقم الطلب</th>
+                                <th>العميل</th>
+                                <th>المحافظة</th>
+                                <th>المنتجات</th>
+                                <th>المبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_orders %}
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td class="fw-semibold">{{ order.order_number }}</td>
+                                    <td>{{ order.customer_name or '—' }}</td>
+                                    <td class="text-secondary">{{ order.governorate or '—' }}</td>
+                                    <td class="small">{% for it in order["items"] %}{{ it.product_name_snapshot }} × {{ it.quantity }}{% if not loop.last %}، {% endif %}{% endfor %}</td>
+                                    <td class="fw-semibold">{{ order.total_jod }} د.أ</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-secondary py-4">
+                                        لا توجد طلبات حتى الآن
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card glass-panel">
+            <div class="card-header py-3 px-4">
+                <span class="card-title-gold"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i> إجراءات سريعة</span>
+            </div>
+            <div class="card-body d-grid gap-3 px-4">
+                <a href="/dashboard/chat" class="btn btn-gold-outline" id="btn-quick-agent-chat">
+                    <i class="bi bi-robot" aria-hidden="true"></i> التحدث مع الوكيل (تجربة كعميل)
+                </a>
+                <a href="/dashboard/products/new" class="btn btn-primary btn-gold-solid" id="btn-quick-add-product">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i> إضافة منتج جديد
+                </a>
+                <a href="/dashboard/reports" class="btn btn-gold-outline" id="btn-quick-report">
+                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i> إرسال التقرير اليومي
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    (function () {
+        var el = document.getElementById('today-date');
+        if (!el) return;
+        try {
+            el.textContent = 'اليوم: ' + new Intl.DateTimeFormat('ar', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            }).format(new Date());
+        } catch (e) {}
+    })();
+</script>
+{% endblock %}

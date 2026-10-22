@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "messenger-agent"
+version = "0.1.0"
+description = "Facebook Messenger AI sales agent for a Jordanian perfume store"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+dependencies = [
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.34.0",
+    "python-multipart==0.0.20",
+    "starlette-csrf==3.0.0",
+    "supabase>=2.13.0",
+    "google-genai==1.14.0",
+    "httpx==0.28.1",
+    "Jinja2==3.1.5",
+    "MarkupSafe==3.0.2",
+    "pydantic==2.11.1",
+    "pydantic-settings==2.8.1",
+    "python-dotenv==1.1.0",
+    "python-dateutil==2.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.5",
+    "pytest-asyncio==0.25.3",
+    "pytest-cov==6.1.0",
+    "ruff==0.9.10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "UP"]

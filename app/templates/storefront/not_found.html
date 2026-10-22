@@ -1,0 +1,16 @@
+{% extends "storefront/layout.html" %}
+
+{% block title %}المنتج غير متوفر | {{ brand.store_name }}{% endblock %}
+
+{% block content %}
+<main class="container detail-section">
+    <div class="empty-state text-center p-5 my-5">
+        <div class="fs-1 mb-3 text-gold"><i class="bi bi-gift" aria-hidden="true"></i></div>
+        <h1 class="h4 text-light mb-2">عذراً، هذا المنتج غير متوفر حالياً</h1>
+        <p class="text-secondary mb-4">ربما لم يعد متوفراً أو تمت إزالته. تصفح باقي المنتجات المتوفرة أو راسلنا على ماسنجر.</p>
+        <div>
+            <a href="/" class="btn btn-primary px-4">تصفح كافة المنتجات</a>
+        </div>
+    </div>
+</main>
+{% endblock %}

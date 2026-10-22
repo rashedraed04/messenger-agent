@@ -1,0 +1,33 @@
+{% extends "auth/_layout.html" %}
+
+{% block title %}تسجيل الدخول{% endblock %}
+{% block subtitle %}لوحة التحكم — تسجيل الدخول{% endblock %}
+
+{% block content %}
+{% if notice %}
+<div class="success-alert mb-3" id="login-notice" role="status">{{ notice }}</div>
+{% endif %}
+
+<form action="/auth/login" method="post" id="login-form">
+    {{ csrf_input(request) }}
+    <div class="mb-3">
+        <label for="email" class="form-label">البريد الإلكتروني</label>
+        <input type="email" class="form-control" id="email" name="email" maxlength="254"
+               placeholder="name@gmail.com" value="{{ email or '' }}" autocomplete="username" required autofocus>
+    </div>
+    <div class="mb-2">
+        <label for="password" class="form-label">كلمة المرور</label>
+        <input type="password" class="form-control" id="password" name="password"
+               placeholder="••••••••" autocomplete="current-password" required>
+    </div>
+    <div class="mb-4 text-start">
+        <a href="/auth/forgot-password" class="auth-link" id="link-forgot-password">نسيت كلمة المرور؟</a>
+    </div>
+    <button type="submit" class="btn btn-login w-100 mb-3" id="btn-login">
+        تسجيل الدخول إلى لوحة التحكم
+    </button>
+    <div class="text-center">
+        <a href="/" class="muted-link">← العودة إلى المتجر الرئيسي للزبائن</a>
+    </div>
+</form>
+{% endblock %}

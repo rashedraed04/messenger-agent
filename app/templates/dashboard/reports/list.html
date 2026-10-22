@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% set active_page = "reports" %}
+
+{% block title %}التقارير اليومية{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">📋 التقارير اليومية على تيليجرام</h1>
+        <p class="text-secondary mb-0">سجل الإرسال اليومي التلقائي عند الساعة 10:00 مساءً بتوقيت عمّان</p>
+    </div>
+    <form method="post" action="/dashboard/reports/send-now">
+        {{ csrf_input(request) }}
+        <button type="submit" class="btn btn-primary" id="btn-send-report-now">
+            🚀 إرسال تقرير اليوم إلى تيليجرام الآن
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card p-3">
+    {% if reports %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>تاريخ التقرير</th>
+                    <th>حالة الإرسال</th>
+                    <th>وقت الإرسال</th>
+                    <th>محتوى التقرير</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr>
+                    <td class="fw-bold">{{ r.report_date }}</td>
+                    <td>
+                        {% if r.sent_successfully %}
+                        <span class="badge bg-success">تم الإرسال لتيليجرام ✅</span>
+                        {% else %}
+                        <span class="badge bg-danger">فشل الإرسال ❌</span>
+                        {% if r.error_message %}
+                        <div class="text-danger small mt-1">{{ r.error_message }}</div>
+                        {% endif %}
+                        {% endif %}
+                    </td>
+                    <td><small class="text-secondary">{{ r.sent_at[:10] }} {{ r.sent_at[11:16] }}</small></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#repDetails-{{ r.id }}">
+                            📄 معاينة النص
+                        </button>
+                        <div class="collapse mt-2" id="repDetails-{{ r.id }}">
+                            <div class="card card-body bg-dark text-light border-secondary p-3" style="font-size: 13px; white-space: pre-line;">
+                                {{ r.report_content|striptags }}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-secondary">
+        <h5>لا توجد تقارير سابقة مسجلة</h5>
+        <p>يتم إرسال التقارير تلقائياً كل ليلة عبر Cloud Scheduler، أو يمكنك الضغط على "إرسال تقرير اليوم" أعلاه.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

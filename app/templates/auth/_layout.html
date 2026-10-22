@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>{% block title %}{% endblock %} | {{ brand.store_name }}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='img/logo.png') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet"
+          integrity="sha384-dpuaG1suU0eT09tx5plTaGMLBsfDLzUCCUXOY2j/LSvXYuG6Bqs43ALlhIqAJVRb" crossorigin="anonymous">
+
+    <style>
+        :root {
+            --primary-color: #d4af37;
+            --primary-light: #f5a524;
+            --bg-dark: #12131a;
+            --bg-card: #1a1c24;
+            --border-color: #2a2c36;
+            --text-primary: #f3f1ea;
+            --text-secondary: #a09d94;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.12) 0%, rgba(18, 19, 26, 0) 60%), #0e0f14;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 1.5rem;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+            padding: 3rem 2.5rem;
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .login-brand {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .login-logo {
+            display: block;
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+            margin: 0 auto 1rem;
+            background: #fff;
+            border-radius: 1rem;
+            padding: 0.35rem;
+            border: 1px solid rgba(212, 175, 55, 0.35);
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+        }
+
+        .form-control:focus {
+            background: var(--bg-dark);
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.2);
+        }
+
+        .form-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            border: none;
+            color: #1a1408;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            padding: 0.75rem;
+            font-size: 1.05rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-login:hover {
+            box-shadow: 0 6px 20px rgba(245, 165, 36, 0.35);
+            color: #1a1408;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            .login-card { padding: 2rem 1.25rem; border-radius: 1rem; }
+        }
+
+        .error-alert {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .success-alert {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .auth-link {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .auth-link:hover { color: var(--primary-light); text-decoration: underline; }
+
+        .muted-link {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .auth-hint {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <img src="{{ url_for('static', path='img/logo.png') }}" alt="شعار {{ brand.store_name }}" class="login-logo">
+        <div class="login-brand">{{ brand.store_name }}</div>
+        <div class="login-subtitle">{% block subtitle %}{% endblock %}</div>
+
+        {% if error %}
+        <div class="error-alert mb-3" id="auth-error" role="alert">{{ error }}</div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

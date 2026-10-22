@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% set active_page = "setup" %}
+
+{% block title %}إعداد النظام والربط{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">🚀 دليل إعداد النظام وربط المنصات</h1>
+        <p class="text-secondary mb-0">خطوات تشغيل البوت وإطلاق النظام بنجاح لمتجرك</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-10">
+        <!-- Checklist Cards -->
+        <div class="card p-4 mb-4">
+            <h5 class="card-title mb-4">📋 قائمة التحقق والجاهزية</h5>
+            <div class="list-group list-group-flush">
+                {% for item in checklist %}
+                <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent py-3 border-secondary">
+                    <div class="d-flex align-items-center">
+                        <span class="fs-4 me-3">
+                            {% if item.status == 'completed' %}
+                            ✅
+                            {% else %}
+                            ⏳
+                            {% endif %}
+                        </span>
+                        <div>
+                            <h6 class="mb-1 fw-bold">{{ item.title }}</h6>
+                            <small class="text-secondary">{{ item.description }}</small>
+                        </div>
+                    </div>
+                    <div>
+                        {% if item.status == 'completed' %}
+                        <span class="badge bg-success ms-2">جاهز</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark ms-2">بحاجة إكمال</span>
+                        {% endif %}
+
+                        {% if item.action_url %}
+                        <a href="{{ item.action_url }}" class="btn btn-sm btn-outline-primary ms-2">
+                            {{ item.action_label }}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Meta Setup Instructions Card -->
+        <div class="card p-4">
+            <h5 class="card-title mb-3">📘 خطوات ربط Meta Messenger Webhook</h5>
+            <ol class="pe-3" style="line-height: 1.9;">
+                <li>توجه إلى بوابة المطورين <a href="https://developers.facebook.com" target="_blank" class="text-decoration-none">developers.facebook.com</a> وأنشئ تطبيقاً من نوع <strong>Business</strong>.</li>
+                <li>أضف منتج <strong>Messenger</strong> للتطبيق.</li>
+                <li>في قسم Webhooks، اضغط على <strong>Configure Webhooks</strong> وأدخل:
+                    <ul>
+                        <li><strong>Callback URL:</strong> <code>{{ request.base_url }}webhook</code></li>
+                        <li><strong>Verify Token:</strong> الرمز الموجود في إعدادات البيئة <code>META_VERIFY_TOKEN</code></li>
+                    </ul>
+                </li>
+                <li>اشترك في أحداث: <code>messages</code> و <code>messaging_postbacks</code> و <code>messaging_handovers</code>.</li>
+                <li>اربط صفحة الفيسبوك الخاصة بمتجرك واستخرج <strong>Page Access Token</strong> وضعه في متغيرات البيئة.</li>
+                <li>قدم التطبيق لمراجعة Meta App Review لصلاحية <code>pages_messaging</code> (Advanced Access).</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}

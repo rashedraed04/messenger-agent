@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% set active_page = "products" %}
+
+{% block title %}المنتجات{% endblock %}
+
+{% block page_header %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="page-title">كتالوج المنتجات</h1>
+        <p class="page-subtitle mb-0">إدارة المنتجات والأسعار</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="/dashboard/product-types" class="btn btn-outline-secondary" id="btn-manage-types">
+            <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i> أنواع المنتجات
+        </a>
+        <a href="/dashboard/categories" class="btn btn-outline-secondary" id="btn-manage-categories">
+            <i class="bi bi-tags-fill" aria-hidden="true"></i> إدارة الفئات
+        </a>
+        <a href="/dashboard/products/new" class="btn btn-primary" id="btn-add-product">
+            ➕ إضافة منتج جديد
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Search & Filters -->
+<div class="card p-3 mb-4">
+    <form method="get" action="/dashboard/products" class="row g-3">
+        <div class="col-12 col-md-4">
+            <input type="text" name="q" class="form-control" placeholder="ابحث باسم المنتج أو الماركة..." value="{{ search_query }}">
+        </div>
+        <div class="col-6 col-md-2">
+            <select name="product_type" class="form-select" aria-label="النوع">
+                <option value="">جميع الأنواع</option>
+                {% for t in product_types %}
+                <option value="{{ t.name_ar }}" {% if selected_type == t.name_ar %}selected{% endif %}>{{ t.name_ar }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <select name="category" class="form-select" aria-label="الفئة">
+                <option value="">جميع الفئات</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+                {% if selected_category and selected_category not in categories %}
+                <option value="{{ selected_category }}" selected>{{ selected_category }}</option>
+                {% endif %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <button type="submit" class="btn btn-gold-outline w-100 py-2">تصفية</button>
+        </div>
+    </form>
+</div>
+
+<!-- Products Table -->
+<div class="card p-3">
+    {% if products %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>اسم المنتج</th>
+                    <th>النوع</th>
+                    <th>الماركة</th>
+                    <th>الفئة</th>
+                    <th>الحجم</th>
+                    <th>السعر</th>
+                    <th>الحالة</th>
+                    <th class="text-end">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>
+                        <div class="fw-bold">{{ p.name_ar }}</div>
+                        {% if p.name_en %}
+                        <small class="text-secondary">{{ p.name_en }}</small>
+                        {% endif %}
+                    </td>
+                    {% set ptype = product_types | selectattr("name_ar", "equalto", p.product_type) | first %}
+                    <td>{{ p.product_type or "—" }}</td>
+                    <td>{{ p.brand or "—" }}</td>
+                    <td>{% if p.category %}<span class="badge bg-dark border border-secondary">{{ p.category }}</span>{% else %}<span class="text-secondary">—</span>{% endif %}</td>
+                    {% set unit = ptype.size_unit if ptype else ("مل" if not p.product_type else "") %}
+                    <td class="text-nowrap">{{ (p.size_ml ~ (" " ~ unit if unit else "")) if p.size_ml else "—" }}</td>
+                    <td class="fw-bold text-success">{{ "%.3f"|format(p.price_jod|float) }} د.أ</td>
+                    <td>
+                        {% if p.is_active %}
+                        <span class="badge bg-success">نشط</span>
+                        {% else %}
+                        <span class="badge bg-secondary">معطل</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a href="/dashboard/products/{{ p.id }}/edit" class="btn btn-sm btn-outline-primary ms-1">
+                            ✏️ تعديل
+                        </a>
+                        <form action="/dashboard/products/{{ p.id }}/delete" method="post" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا المنتج؟');">
+                            {{ csrf_input(request) }}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                🗑️ حذف
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "dashboard/_pagination.html" %}
+    {% else %}
+    <div class="text-center py-5 text-secondary">
+        <h5>لا توجد منتجات مطابقة للبحث</h5>
+        <p>أضف منتجات جديدة أو قم بتعديل معايير البحث.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

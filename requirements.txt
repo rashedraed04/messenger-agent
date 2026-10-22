@@ -1,0 +1,35 @@
+# =============================================================================
+# Production Dependencies — pinned for reproducibility
+# =============================================================================
+
+# Web framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+starlette-csrf==3.0.0
+
+# Supabase
+supabase>=2.13.0
+
+# AI
+google-genai==1.14.0
+
+# HTTP client
+httpx==0.28.1
+
+# Templates
+Jinja2==3.1.5
+MarkupSafe==3.0.2
+
+# Configuration
+pydantic==2.11.1
+pydantic-settings==2.8.1
+python-dotenv==1.1.0
+
+# Testing
+pytest==8.3.5
+pytest-asyncio==0.25.3
+pytest-cov==6.1.0
+
+# Utilities
+python-dateutil==2.9.0

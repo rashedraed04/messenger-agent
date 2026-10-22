@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+{% set active_page = "agent_chat" %}
+
+{% block title %}التحدث مع الوكيل الذكي{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Chat Studio Styles */
+.chat-container {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    height: 700px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.chat-header {
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.25rem;
+}
+
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.msg-row {
+    display: flex;
+    width: 100%;
+}
+
+.msg-row.inbound {
+    justify-content: flex-start; /* Customer message on the right in RTL */
+}
+
+.msg-row.outbound {
+    justify-content: flex-end; /* Bot message on the left in RTL */
+}
+
+.msg-bubble {
+    max-width: 78%;
+    padding: 0.9rem 1.15rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.msg-bubble.inbound {
+    background: linear-gradient(135deg, #4f46e5, #4338ca);
+    color: #ffffff;
+    border-top-right-radius: 0.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.msg-bubble.outbound {
+    background-color: var(--bg-subtle);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-top-left-radius: 0.25rem;
+}
+
+.msg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    opacity: 0.85;
+    margin-bottom: 0.35rem;
+}
+
+.msg-footer {
+    margin-top: 0.5rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--divider-subtle);
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.typing-indicator {
+    display: none;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    border-top-left-radius: 0.25rem;
+    width: fit-content;
+    margin-right: auto;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+.quick-prompts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-subtle);
+    border-top: 1px solid var(--border-color);
+}
+
+.prompt-chip {
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    color: var(--chip-text);
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.prompt-chip:hover {
+    background: rgba(212, 175, 55, 0.22);
+    border-color: var(--primary-light);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.chat-input-bar {
+    padding: 1rem 1.25rem;
+    background: var(--bg-header);
+    border-top: 1px solid var(--border-color);
+}
+
+.inspector-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+.state-badge {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.slot-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--divider-subtle);
+    font-size: 0.88rem;
+}
+
+.slot-item:last-child {
+    border-bottom: none;
+}
+
+.slot-label {
+    color: var(--text-secondary);
+}
+
+.slot-val {
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: left;
+    max-width: 60%;
+    word-break: break-word;
+}
+@media (max-width: 768px) {
+    .chat-container { height: calc(100dvh - 150px); min-height: 460px; }
+    .chat-messages { padding: 0.85rem; }
+    .quick-prompts { flex-wrap: nowrap; overflow-x: auto; padding: 0.6rem 0.85rem; }
+    .prompt-chip { white-space: nowrap; flex-shrink: 0; }
+}
+</style>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h1 class="h3 mb-1 text-white">🤖 محادثة مع الوكيل الذكي (تجربة كأي عميل)</h1>
+        <p class="text-secondary mb-0">
+            تحدث مع الوكيل كزبون عادي بدون أي تفضيلات مسبقة لاختبار الردود واللهجة الأردنية ودقة استخراج تفاصيل الطلبات.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-warning" id="btn-reset-chat">
+            🔄 بدء محادثة جديدة (تصفير)
+        </button>
+        <a href="/dashboard/settings" class="btn btn-outline-secondary" id="btn-goto-settings">
+            ⚙️ شخصية البوت
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Chat Column -->
+    <div class="col-lg-8">
+        <div class="chat-container">
+            <!-- Header Bar -->
+            <div class="chat-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-4">🛍️</span>
+                    <div>
+                        <div class="fw-bold text-white">{{ bot_config.store_name or "متجر التقوى" }}</div>
+                        <div class="small text-secondary">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle" id="chat-mode-badge">
+                                👤 عميل عام (بدون تفضيلات مسبقة)
+                            </span>
+                            <span class="ms-2 opacity-75" style="font-size: 11px;" id="session-psid-display">
+                                الجلسة: {{ session_id }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-toggle-persona" title="تخصيص اسم العميل">
+                        ✏️ تخصيص الاسم
+                    </button>
+                </div>
+            </div>
+
+            <!-- Optional Persona Input Panel -->
+            <div id="persona-panel" class="p-2 px-3 border-bottom border-secondary bg-dark" style="display: none;">
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <small class="text-secondary">اسم العميل المحاكى:</small>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control form-control-sm" id="customer-name-override"
+                               placeholder="اتركه فارغاً للتحدث كعميل مجهول بدون تفضيلات">
+                    </div>
+                    <div class="col-auto">
+                        <small class="text-muted" style="font-size: 11px;">(إذا ترك فارغاً يتصرف البوت مع عميل عام جديد تماماً)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Stream Area -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- Welcome bubble if no history -->
+                {% if not messages %}
+                <div class="msg-row outbound" id="welcome-msg-row">
+                    <div class="msg-bubble outbound">
+                        <div class="msg-header">
+                            <span class="fw-bold">🤖 {{ bot_config.store_name or "وكيل المبيعات" }}</span>
+                            <span>الآن</span>
+                        </div>
+                        <div class="msg-body" style="white-space: pre-line;">
+                            {{ bot_config.bot_greeting or "يا هلا فيك بمتجر التقوى! 🌹 تفضل كيف بقدر أساعدك اليوم؟ حابب تستفسر عن منتج معين أو تشوف الكتالوج؟" }}
+                        </div>
+                        <div class="msg-footer">
+                            <span>💡 هذه جلسة نظيفة لاختبار الذكاء الاصطناعي كأي عميل جديد.</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Existing Messages -->
+                {% for m in messages %}
+                <div class="msg-row {{ m.direction }}">
+                    <div class="msg-bubble {{ m.direction }}">
+                        <div class="msg-header">
+                            <span class="fw-bold">
+                                {% if m.direction == 'inbound' %}👤 أنت (العميل){% else %}🤖 الوكيل الذكي{% endif %}
+                            </span>
+                            <span>{{ m.created_at[11:16] if m.created_at else '' }}</span>
+                        </div>
+                        <div class="msg-body" style="white-space: pre-line;">{{ m.content }}</div>
+
+                        {% if m.ai_metadata %}
+                        <div class="msg-footer">
+                            <span>موديل: {{ m.ai_metadata.model_name or 'gemini' }}</span>
+                            {% if m.ai_metadata.intent %}
+                            <span>قصد: {{ m.ai_metadata.intent }}</span>
+                            {% endif %}
+                            {% if m.ai_metadata.latency_ms %}
+                            <span>زمن: {{ "%.0f"|format(m.ai_metadata.latency_ms) }}ms</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Typing indicator -->
+                <div class="msg-row outbound">
+                    <div class="typing-indicator" id="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Testing Prompts Chips -->
+            <div class="quick-prompts" id="quick-prompts">
+                <span class="small text-secondary me-1 align-self-center">💡 أسئلة سريعة:</span>
+                <button type="button" class="prompt-chip" data-prompt="بدي هدايا لأهلي راجعين من العمرة، شو بتنصحني؟">
+                    🎁 هدايا العمرة
+                </button>
+                <button type="button" class="prompt-chip" data-prompt="عندكم سجاد صلاة؟ وكم سعره؟">
+                    🕌 سجاد صلاة
+                </button>
+                <button type="button" class="prompt-chip" data-prompt="بدي أطلب مسبحة وسجادة، أنا بعمان">
+                    📦 طلب منتجين
+                </button>
+                <button type="button" class="prompt-chip" data-prompt="كم يوم بوصل الطلب لإربد وكم تكلفة التوصيل؟">
+                    🚚 التوصيل إلى إربد
+                </button>
+                <button type="button" class="prompt-chip" data-prompt="هل الدفع كاش عند الاستلام؟ وشو سياسة الإرجاع؟">
+                    💳 الدفع والإرجاع
+                </button>
+                <button type="button" class="prompt-chip" data-prompt="حابب أحكي مع موظف خدمة العملاء لو سمحت">
+                    🛑 تحويل لموظف
+                </button>
+            </div>
+
+            <!-- Chat Input Bar -->
+            <div class="chat-input-bar">
+                <form id="chat-form" onsubmit="return false;">
+                    <div id="image-preview" class="align-items-center gap-2 mb-2 small text-secondary" style="display: none;">
+                        <img id="image-preview-thumb" alt="الصورة المرفقة" style="height: 48px; border-radius: 6px;">
+                        <span>صورة مرفقة، ستُرسل مع رسالتك</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-remove-image" aria-label="إزالة الصورة">✕</button>
+                    </div>
+                    <div class="input-group">
+                        <input type="file" id="chat-image-input" accept="image/jpeg,image/png,image/webp" hidden>
+                        <button class="btn btn-outline-secondary" type="button" id="btn-attach-image" title="إرفاق صورة منتج كأنك الزبون" aria-label="إرفاق صورة">📷</button>
+                        <input type="text" id="chat-input" class="form-control"
+                               placeholder="اكتب رسالتك كعميل هنا... (مثال: مرحبا، بدي أستفسر عن سعر سجادة صلاة)"
+                               autocomplete="off">
+                        <button class="btn btn-primary px-4 d-flex align-items-center gap-1" type="submit" id="btn-send-message">
+                            <span>إرسال</span> <span>🚀</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inspector Column -->
+    <div class="col-lg-4">
+        <!-- State Machine & Status -->
+        <div class="inspector-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="h6 mb-0 text-white fw-bold">🔍 مرقاب حالة المحادثة</h5>
+                <span id="inspector-state-badge" class="badge state-badge bg-primary">
+                    {{ conversation.state or "DISCOVERY" }}
+                </span>
+            </div>
+
+            <!-- Handoff Alert Box -->
+            <div id="handoff-alert-box" class="alert alert-warning py-2 px-3 mb-3"
+                 style="display: {% if conversation.is_human_handoff %}block{% else %}none{% endif %}; font-size: 0.85rem;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>⚠️ تم تحويل المحادثة لموظف</strong>
+                        <div class="small text-secondary" id="handoff-reason-text">
+                            {{ conversation.handoff_reason or "طلب تحويل يدوي" }}
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="btn-reenable-bot">
+                        إعادة تفعيل البوت
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-secondary small mb-3">
+                توضح هذه اللوحة كيف يتنقل الوكيل بين حالات الطلب بدقة بناءً على كلام العميل.
+            </p>
+
+            <div class="p-2 rounded bg-dark border border-secondary mb-3">
+                <div class="small text-secondary mb-1">تسلسل حالات الطلب:</div>
+                <div class="d-flex flex-wrap gap-1" style="font-size: 10px;">
+                    <span class="badge bg-secondary opacity-75">1. DISCOVERY</span>
+                    <span class="badge bg-secondary opacity-75">2. PRODUCT_SELECTION</span>
+                    <span class="badge bg-secondary opacity-75">3. COLLECTING_DETAILS</span>
+                    <span class="badge bg-secondary opacity-75">4. AWAITING_CONFIRMATION</span>
+                    <span class="badge bg-success opacity-75">5. CONFIRMED</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collected Slots Inspector -->
+        <div class="inspector-card mb-4">
+            <h5 class="h6 mb-3 text-white fw-bold">📋 البيانات المستخرجة من العميل</h5>
+
+            {% set slots = conversation.collected_slots or {} %}
+            <div id="slots-container">
+                <div class="slot-item">
+                    <span class="slot-label">اسم العميل:</span>
+                    <span class="slot-val" id="slot-name">{{ slots.customer_name or "—" }}</span>
+                </div>
+                <div class="slot-item">
+                    <span class="slot-label">رقم الهاتف:</span>
+                    <span class="slot-val" id="slot-phone">{{ slots.customer_phone or "—" }}</span>
+                </div>
+                <div class="slot-item">
+                    <span class="slot-label">المحافظة:</span>
+                    <span class="slot-val" id="slot-governorate">{{ slots.governorate or "—" }}</span>
+                </div>
+                <div class="slot-item">
+                    <span class="slot-label">العنوان التفصيلي:</span>
+                    <span class="slot-val" id="slot-address">{{ slots.address_detail or "—" }}</span>
+                </div>
+                <div class="slot-item">
+                    <span class="slot-label">رسوم التوصيل:</span>
+                    <span class="slot-val" id="slot-fee">
+                        {% if slots.delivery_fee_jod %}{{ "%.3f"|format(slots.delivery_fee_jod|float) }} د.أ{% else %}—{% endif %}
+                    </span>
+                </div>
+                <div class="slot-item flex-column align-items-start">
+                    <span class="slot-label mb-1">المنتجات المختارة:</span>
+                    <div id="slot-products-list" class="w-100">
+                        {% if slots.products %}
+                            {% for p in slots.products %}
+                            <div class="d-flex justify-content-between align-items-center small p-1 rounded bg-dark mb-1">
+                                <span>🧴 {{ p.product_name }}</span>
+                                <span class="badge bg-primary">× {{ p.quantity }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-secondary small">لم يختر أي منتج بعد</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Diagnostics & Knowledge Info -->
+        <div class="inspector-card">
+            <h5 class="h6 mb-3 text-white fw-bold">⚡ تشخيص ومعلومات الوكيل</h5>
+            <div class="slot-item">
+                <span class="slot-label">موديل الذكاء الاصطناعي:</span>
+                <span class="slot-val" id="diag-model">Gemini (تلقائي)</span>
+            </div>
+            <div class="slot-item">
+                <span class="slot-label">زمن الاستجابة الأخير:</span>
+                <span class="slot-val" id="diag-latency">—</span>
+            </div>
+            <div class="slot-item">
+                <span class="slot-label">القصد المكتشف (Intent):</span>
+                <span class="slot-val" id="diag-intent">—</span>
+            </div>
+            <div class="slot-item">
+                <span class="slot-label">المنتجات النشطة بالكتالوج:</span>
+                <span class="slot-val">{{ products_count }} منتج</span>
+            </div>
+            <div class="slot-item">
+                <span class="slot-label">رسوم التوصيل:</span>
+                <span class="slot-val">{{ "%.3f"|format(bot_config.get('delivery_fee_jod', 0)|float) }} د.أ</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', path='js/agent_chat.js') }}"></script>
+{% endblock %}

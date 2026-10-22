@@ -1,0 +1,44 @@
+{# Catalog results (status bar + grid). Rendered on the page and by /partials/products for live search. #}
+<!-- Result Status Bar -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 small" role="status" aria-live="polite">
+    <div class="stock-chip">
+        <span class="stock-dot"></span>
+        <span>المنتجات المتوفرة: </span>
+        <strong class="stock-count">{{ total_count }}</strong> منتج
+        {% if search_query %}
+        <span> نتائج البحث عن: "<strong>{{ search_query }}</strong>"</span>
+        {% endif %}
+        {% if selected_type %}
+        <span> | النوع: <strong class="text-warning">{{ selected_type }}</strong></span>
+        {% endif %}
+        {% if selected_category and selected_category != 'الكل' %}
+        <span> | فئة: <strong class="text-warning">{{ selected_category }}</strong></span>
+        {% endif %}
+    </div>
+    {% if search_query or selected_type or (selected_category and selected_category != 'الكل') %}
+    <div>
+        <a href="/" class="text-secondary text-decoration-none hover-gold" data-reset-filters><i class="bi bi-x-lg" aria-hidden="true"></i> إعادة تعيين التصفية</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Products Grid -->
+{% if products %}
+<div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4">
+    {% for p in products %}
+    <div class="col">
+        {% include "storefront/_card.html" %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="empty-state text-center p-5 my-5">
+    <div class="fs-1 mb-3 text-gold"><i class="bi bi-search" aria-hidden="true"></i></div>
+    <h4 class="text-light mb-2">عذراً، لم نجد منتجات مطابقة لبحثك</h4>
+    <p class="text-secondary mb-4">جرب البحث بكلمات أخرى أو تصفح باقي الفئات المتاحة.</p>
+    <div>
+        <a href="/" class="btn btn-primary px-4" data-reset-filters>عرض كافة المنتجات المتوفرة</a>
+    </div>
+</div>
+{% endif %}

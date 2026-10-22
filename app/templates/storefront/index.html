@@ -1,0 +1,96 @@
+{% extends "storefront/layout.html" %}
+{% from "storefront/_macros.html" import palm_drop %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            {% if brand.sf_hero_pill %}
+            <div class="hero-pill">
+                {{ palm_drop(16) }} <span>{{ brand.sf_hero_pill }}</span> {{ palm_drop(16) }}
+            </div>
+            {% endif %}
+            <h1 class="hero-title"><span class="hero-gold">{{ brand.sf_hero_title_gold }}</span>{% if brand.sf_hero_title_white %} <span class="hero-white">{{ brand.sf_hero_title_white }}</span>{% endif %}</h1>
+            {% if brand.sf_hero_subtitle %}
+            <p class="hero-subtitle">{{ brand.sf_hero_subtitle }}</p>
+            {% endif %}
+
+            {% if brand.trust_badges %}
+            <div class="trust-badges">
+                {% for badge in brand.trust_badges %}
+                <div class="trust-item">
+                    <i class="bi {{ badge.icon }}" aria-hidden="true"></i>
+                    <span>{{ badge.text }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Main Content / Showcase -->
+    <main class="container filter-section">
+        <form method="get" action="/" id="searchForm" role="search" class="mb-3">
+            <input type="hidden" name="type" id="typeInput" value="{{ selected_type or 'الكل' }}">
+            <input type="hidden" name="category" id="categoryInput" value="{{ selected_category }}">
+            <div class="search-box">
+                <input
+                    type="search"
+                    name="q"
+                    id="searchInput"
+                    class="search-input"
+                    autocomplete="off"
+                    enterkeyhint="search"
+                    aria-label="بحث في المنتجات"
+                    placeholder="ابحث باسم المنتج أو الهدية أو الماركة..."
+                    value="{{ search_query }}"
+                >
+                <i class="search-icon bi bi-search" aria-hidden="true"></i>
+            </div>
+        </form>
+
+        {% set q_prefix = ('q=' ~ (search_query | urlencode) ~ '&') if search_query else '' %}
+
+        {% if type_filters %}
+        <!-- Product type filter -->
+        <nav class="filter-row" aria-label="نوع المنتج">
+            <div class="type-pills" data-filter-group="type">
+                <a href="/?{{ q_prefix }}" data-value="الكل"
+                   class="type-pill {% if not selected_type %}active{% endif %}">
+                    <i class="bi bi-grid-fill" aria-hidden="true"></i> كل المنتجات
+                </a>
+                {% for t in type_filters %}
+                <a href="/?{{ q_prefix }}type={{ t.name | urlencode }}" data-value="{{ t.name }}"
+                   class="type-pill {% if selected_type == t.name %}active{% endif %}">
+                    <i class="bi {{ t.icon }}" aria-hidden="true"></i> {{ t.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </nav>
+        {% endif %}
+
+        <!-- Category filter -->
+        <nav class="filter-row mb-4" aria-label="الفئة">
+            <div class="category-pills" id="categoryPills" data-filter-group="category">
+                <a href="/?{{ q_prefix }}category={{ 'الكل' | urlencode }}" data-value="الكل"
+                   class="cat-pill {% if selected_category == 'الكل' or not selected_category %}active{% endif %}">
+                    الكل
+                </a>
+                {% for cat in categories %}
+                <a href="/?{{ q_prefix }}category={{ cat | urlencode }}" data-value="{{ cat }}"
+                   class="cat-pill {% if selected_category == cat %}active{% endif %}">
+                    {{ cat }}
+                </a>
+                {% endfor %}
+            </div>
+        </nav>
+
+        <div id="results">
+            {% include "storefront/_results.html" %}
+        </div>
+    </main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='js/storefront.js') }}"></script>
+{% endblock %}
