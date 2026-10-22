@@ -34,6 +34,7 @@
                 <span class="brand-words">
                     <span class="brand-name">{{ brand.store_name }}</span>
                     {% if brand.store_tagline %}<span class="brand-tagline">{{ brand.store_tagline }}</span>{% endif %}
+                    {% if brand.sf_location %}<span class="brand-tagline brand-location"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i> {{ brand.sf_location }}</span>{% endif %}
                 </span>
             </a>
 
@@ -51,10 +52,6 @@
                         <path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.91 1.455 5.512 3.734 7.21v3.532l3.418-1.875c.915.253 1.884.39 2.848.39 5.523 0 10-4.145 10-9.257C22 6.145 17.523 2 12 2zm1.004 12.443l-2.548-2.72-4.97 2.72 5.467-5.803 2.613 2.72 4.905-2.72-5.467 5.803z"/>
                     </svg>
                     <span>تواصل عبر ماسنجر</span>
-                </a>
-
-                <a href="/dashboard" class="btn-nav-ghost d-none d-md-inline-flex" title="دخول لوحة الإدارة">
-                    <i class="bi bi-lock-fill" aria-hidden="true"></i> الإدارة
                 </a>
             </div>
         </div>
@@ -80,13 +77,13 @@
                     <div class="d-flex flex-wrap justify-content-center justify-content-md-end gap-2">
                         <a href="https://m.me/{{ facebook_page_id }}" target="_blank" rel="noopener noreferrer" class="footer-chip"><i class="bi bi-messenger" aria-hidden="true"></i> دعم العملاء السريع</a>
                         <span class="footer-chip"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i> شحن لكافة المحافظات</span>
-                        <a href="/dashboard" class="footer-chip"><i class="bi bi-lock-fill" aria-hidden="true"></i> لوحة الإدارة</a>
                     </div>
                 </div>
             </div>
 
             <div class="footer-bottom">
                 <span>جميع الحقوق محفوظة © 2026 {{ brand.full_name }}{% if brand.sf_location %} — {{ brand.sf_location }}{% endif %}</span>
+                <a href="/dashboard" class="footer-admin-link" aria-label="لوحة الإدارة"><i class="bi bi-lock-fill" aria-hidden="true"></i></a>
             </div>
         </div>
     </footer>
