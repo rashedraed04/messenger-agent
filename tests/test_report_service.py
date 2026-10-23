@@ -144,3 +144,32 @@ async def test_manual_resend_keeps_nightly_flag():
     await service.generate_and_send_daily_report("s1", date(2026, 10, 22), force_resend=True)
 
     assert report_repo.save_report.call_args.kwargs["is_scheduled"] is True
+
+
+@pytest.mark.parametrize("rows, force, should_send", [
+    ([{"daily_report_enabled": False}], False, False),
+    ([{"daily_report_enabled": False}], True, True),   # ?force=true still sends
+    ([{"daily_report_enabled": True}], False, True),
+    ([], False, True),                                  # no row saved means on
+])
+def test_scheduled_report_respects_toggle(client, monkeypatch, rows, force, should_send):
+    from app.dependencies import get_db
+    from app.main import app
+
+    mock_db = MagicMock()
+    query = mock_db.table.return_value
+    query.select.return_value = query
+    query.eq.return_value = query
+    query.execute.return_value = MagicMock(data=rows)
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    send = AsyncMock(return_value={"sent": True})
+    monkeypatch.setattr(ReportService, "generate_and_send_daily_report", send)
+
+    res = client.post(
+        f"/internal/daily-report?force={'true' if force else 'false'}",
+        headers={"X-Internal-Token": "test-internal-token"},
+    )
+    assert res.status_code == 200
+    assert send.called is should_send
+    assert (res.json()["status"] == "skipped") is (not should_send)

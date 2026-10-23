@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from supabase import Client
 
 from app.config import Settings
+from app.db.repositories.notification_settings import NotificationSettingRepository
 from app.db.repositories.orders import OrderRepository
 from app.db.repositories.reports import ReportRepository
 from app.db.repositories.settings import StoreSettingRepository
@@ -54,6 +55,16 @@ async def trigger_daily_report(
     Also serves as a daily DB ping to prevent Supabase free-tier auto-pause.
     """
     store_id = config.default_store_id
+
+    # This lookup still pings the DB, so the keepalive works while reports are off
+    if not force and not NotificationSettingRepository(db).should_send_daily_report(store_id):
+        logger.info("Daily report is turned off for store %s. Skipping.", store_id)
+        return {
+            "status": "skipped",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "store_id": store_id,
+            "reason": "daily_report_disabled",
+        }
 
     order_repo = OrderRepository(db)
     report_repo = ReportRepository(db)

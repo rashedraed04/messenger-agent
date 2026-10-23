@@ -113,6 +113,26 @@ def test_bot_toggle_saves_setting(auth_client, form, value, msg):
     assert saved[-1].args[0]["setting_value"] == value
 
 
+def test_reports_page_shows_toggle(auth_client):
+    res = auth_client.get("/dashboard/reports")
+    assert 'action="/dashboard/reports/toggle"' in res.text
+    assert "إيقاف التقرير اليومي" in res.text  # no row saved yet means reports are on
+
+
+@pytest.mark.parametrize("form, value, msg", [
+    ({"enabled": "true"}, True, "report_on"),
+    ({}, False, "report_off"),
+])
+def test_report_toggle_saves_setting(auth_client, form, value, msg):
+    mock_db = app.dependency_overrides[get_db]()
+    res = auth_client.post("/dashboard/reports/toggle", data=form, follow_redirects=False)
+    assert res.status_code == 303
+    assert res.headers["location"] == f"/dashboard/reports?msg={msg}"
+    saved = mock_db.table.return_value.upsert.call_args_list
+    assert saved and saved[-1].args[0]["daily_report_enabled"] is value
+    assert saved[-1].args[0]["channel"] == "telegram"
+
+
 @pytest.fixture
 def demo_client(client):
     mock_db = MagicMock()
@@ -143,6 +163,7 @@ def test_demo_account_sees_banner(demo_client):
     "/dashboard/products/new",
     "/dashboard/faqs/new",
     "/dashboard/reports/send-now",
+    "/dashboard/reports/toggle",
     "/dashboard/account/password",
     "/dashboard/account/email",
 ])
