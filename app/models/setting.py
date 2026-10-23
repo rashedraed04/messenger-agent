@@ -3,7 +3,7 @@ Store Setting Pydantic v2 models.
 """
 
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class StoreSettingBase(BaseModel):

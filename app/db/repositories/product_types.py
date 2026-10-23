@@ -152,10 +152,6 @@ class ProductTypeRepository:
         types, _ = self.list_or_default(store_id)
         return {t["name_ar"]: t for t in types if t.get("name_ar")}
 
-    def get_filter_names(self, store_id: str) -> list[str]:
-        types, _ = self.list_or_default(store_id)
-        return [t["name_ar"] for t in types if t.get("show_in_filter")]
-
     def get_by_id(self, store_id: str, type_id: str) -> dict[str, Any] | None:
         try:
             res = (

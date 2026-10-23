@@ -132,6 +132,7 @@ def show_storefront(
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "storefront/index.html",
         {
             "request": request,
@@ -157,6 +158,7 @@ def storefront_results_partial(
     """HTML fragment of the results grid used by live search (no page reload)."""
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "storefront/_results.html",
         {"request": request, **_catalog_context(db, config, q, category, product_type)},
     )
@@ -180,6 +182,7 @@ def show_product_detail(
 
     if not product:
         return templates.TemplateResponse(
+            request,
             "storefront/not_found.html",
             {
                 "request": request,
@@ -212,6 +215,7 @@ def show_product_detail(
     notes = [t.strip() for t in (product.get("tags") or "").split(",") if t.strip()]
 
     return templates.TemplateResponse(
+        request,
         "storefront/detail.html",
         {
             "request": request,
@@ -235,6 +239,7 @@ def show_privacy_policy(
     store_name, store_desc = _store_info(db, config.default_store_id)
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "storefront/privacy.html",
         {
             "request": request,

@@ -63,6 +63,7 @@ def list_categories(
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/categories/list.html",
         {
             "request": request,

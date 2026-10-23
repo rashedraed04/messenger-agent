@@ -2,7 +2,6 @@
 Webhook event repository for idempotency handling.
 """
 
-from typing import Any
 from supabase import Client
 
 

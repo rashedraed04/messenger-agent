@@ -32,7 +32,11 @@ class MessengerSendAPI:
     async def _post_payload(self, payload: dict[str, Any], timeout: float = 4.0) -> dict[str, Any]:
         """Send JSON payload to Meta Graph API."""
         if not self.page_access_token or self.page_access_token.startswith("test-"):
-            logger.info("Mock Send API dispatch (no live page token): %s", payload)
+            # Log the shape only: replies can carry the customer's name, phone and address
+            logger.info(
+                "Mock Send API dispatch (no live page token): keys=%s",
+                sorted(payload.get("message") or {}) or payload.get("sender_action"),
+            )
             return {"recipient_id": payload.get("recipient", {}).get("id"), "message_id": "mock_mid_123"}
 
         headers = {
@@ -86,31 +90,3 @@ class MessengerSendAPI:
             "sender_action": action,
         }
         return await self._post_payload(payload, timeout=2.0)
-
-    async def send_quick_replies(
-        self,
-        recipient_psid: str,
-        text: str,
-        quick_replies: list[dict[str, str]],
-    ) -> dict[str, Any]:
-        """
-        Send text with quick reply buttons.
-        quick_replies format: [{"title": "نعم", "payload": "YES"}, ...]
-        """
-        formatted_replies = [
-            {
-                "content_type": "text",
-                "title": qr["title"],
-                "payload": qr.get("payload", qr["title"]),
-            }
-            for qr in quick_replies
-        ]
-        payload = {
-            "recipient": {"id": recipient_psid},
-            "messaging_type": "RESPONSE",
-            "message": {
-                "text": text,
-                "quick_replies": formatted_replies,
-            },
-        }
-        return await self._post_payload(payload)

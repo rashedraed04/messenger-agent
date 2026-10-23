@@ -7,13 +7,15 @@ Creates and configures the main application with:
 - Static file serving
 - Jinja2 template engine
 - CSRF protection for dashboard/auth forms
+- A friendly Arabic 500 page that never shows tracebacks
 """
 
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -35,6 +37,10 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
 )
 logger = logging.getLogger("messenger_agent")
+# httpx logs every request URL at INFO: Telegram URLs carry the bot token and
+# Supabase query URLs can carry customer phone numbers
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # ---------------------------------------------------------------------------
 # Template context: store identity for every page
@@ -67,6 +73,28 @@ STATIC_DIR = BASE_DIR / "static"
 
 
 # ---------------------------------------------------------------------------
+# Unhandled errors: friendly Arabic message, no stack traces or file paths
+# ---------------------------------------------------------------------------
+SERVER_ERROR_MESSAGE = "عذراً، حدث خطأ غير متوقع. يرجى المحاولة لاحقاً."
+
+
+async def server_error_handler(request: Request, exc: Exception) -> Response:
+    """Starlette re-raises after this returns, so uvicorn still logs the traceback server-side."""
+    if "text/html" not in request.headers.get("accept", ""):
+        return JSONResponse({"detail": SERVER_ERROR_MESSAGE}, status_code=500)
+    try:
+        return request.app.state.templates.TemplateResponse(
+            request, "errors/500.html", status_code=500
+        )
+    except Exception:
+        return HTMLResponse(
+            f'<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8">'
+            f"<p>{SERVER_ERROR_MESSAGE}</p></html>",
+            status_code=500,
+        )
+
+
+# ---------------------------------------------------------------------------
 # Lifespan (startup / shutdown)
 # ---------------------------------------------------------------------------
 @asynccontextmanager
@@ -95,8 +123,10 @@ def create_app() -> FastAPI:
         version="0.1.0",
         docs_url="/docs" if settings.is_development else None,
         redoc_url="/redoc" if settings.is_development else None,
+        openapi_url="/openapi.json" if settings.is_development else None,
         lifespan=lifespan,
     )
+    application.add_exception_handler(Exception, server_error_handler)
 
     # --- Static files ---
     if STATIC_DIR.exists():

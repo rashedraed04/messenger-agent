@@ -3,9 +3,9 @@ Notification Setting Pydantic v2 models.
 Manages daily report schedules, Telegram chat targets, and alert toggles.
 """
 
-from datetime import datetime, time
+from datetime import datetime
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class NotificationSettingBase(BaseModel):

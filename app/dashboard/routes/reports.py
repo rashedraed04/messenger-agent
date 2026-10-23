@@ -35,6 +35,7 @@ def list_reports(
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/reports/list.html",
         {
             "request": request,

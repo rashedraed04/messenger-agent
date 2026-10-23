@@ -47,6 +47,7 @@ def show_settings(
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/settings/index.html",
         {
             "request": request,

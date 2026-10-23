@@ -7,7 +7,6 @@ import pytest
 from app.dashboard.middleware import require_auth
 from app.dependencies import get_db
 from app.main import app
-from app.models.conversation import ConversationState
 
 
 @pytest.fixture

@@ -5,7 +5,6 @@ Gemini AI Provider implementation using google-genai SDK.
 import asyncio
 import logging
 import time
-from typing import Any
 
 from google import genai
 from google.genai import errors, types
@@ -141,7 +140,6 @@ class GeminiProvider(AIProvider):
                 continue
 
             except (errors.ServerError, errors.APIError, Exception) as e:
-                err_str = str(e).lower()
                 last_error = e
                 logger.warning(
                     "Gemini model %s error (%s). Switching immediately to next fallback...",

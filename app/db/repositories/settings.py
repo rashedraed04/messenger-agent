@@ -29,17 +29,6 @@ class StoreSettingRepository:
             for row in (res.data or [])
         }
 
-    def list_all_records(self, store_id: str) -> list[dict[str, Any]]:
-        """Fetch all raw rows including setting_type and updated_at."""
-        res = (
-            self.client.table(self.table)
-            .select("*")
-            .eq("store_id", store_id)
-            .order("setting_key")
-            .execute()
-        )
-        return res.data or []
-
     def get_value(self, store_id: str, key: str, default: str = "") -> str:
         """Fetch a specific setting value."""
         res = (

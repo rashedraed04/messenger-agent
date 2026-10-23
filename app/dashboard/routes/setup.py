@@ -86,6 +86,7 @@ def show_setup_checklist(
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/setup.html",
         {
             "request": request,

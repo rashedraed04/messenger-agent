@@ -117,6 +117,7 @@ def _render_form(
     types, _ = ProductTypeRepository(db).list_or_default(store_id)
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/products/form.html",
         {
             "request": request,
@@ -164,6 +165,7 @@ def list_products(
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/products/list.html",
         {
             "request": request,

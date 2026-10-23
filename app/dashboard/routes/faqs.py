@@ -30,6 +30,7 @@ def list_faqs(
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/faqs/list.html",
         {
             "request": request,

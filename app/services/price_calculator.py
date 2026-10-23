@@ -8,7 +8,7 @@ AI MUST NEVER perform financial calculations.
 
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 JOD_PRECISION = Decimal("0.001")
 

@@ -6,11 +6,13 @@ Performs a lightweight Supabase DB query to:
 2. Keep the Supabase free-tier database active (prevents 7-day inactivity pause).
 
 This endpoint is called by:
-- Cloud Run readiness/liveness probes
-- The Cloud Scheduler daily report job (which also keeps the DB alive)
-- External uptime monitors
+- Render's health check (healthCheckPath in render.yaml)
+- The cron-job.org keep-awake job every 14 minutes (also stops Render's free
+  instance from spinning down)
+- External uptime monitors (GET or HEAD)
 """
 
+import asyncio
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
@@ -20,20 +22,29 @@ from app.dependencies import get_db
 
 router = APIRouter(tags=["health"])
 
+# Answer quickly even if Supabase hangs; the client's own timeout is minutes long
+DB_PING_TIMEOUT_SECONDS = 5
+
+
+def _ping_db(db: Client) -> None:
+    db.table("stores").select("id").limit(1).execute()
+
 
 @router.get("/health")
-def health_check(db: Client = Depends(get_db)) -> dict:
+@router.head("/health", include_in_schema=False)
+async def health_check(db: Client = Depends(get_db)) -> dict:
     """
     Return application health status.
 
-    Executes a trivial DB query (SELECT 1 from stores LIMIT 1) to keep
-    the Supabase free-tier database awake and confirm connectivity.
+    Always answers 200 so a database hiccup never makes Render restart the
+    web service; the `database` field reports whether the ping got through.
     """
-    db_status = "unknown"
     try:
         # Lightweight query — just need any round-trip to prevent auto-pause
-        db.table("stores").select("id").limit(1).execute()
+        await asyncio.wait_for(asyncio.to_thread(_ping_db, db), DB_PING_TIMEOUT_SECONDS)
         db_status = "connected"
+    except asyncio.TimeoutError:
+        db_status = "error: timeout"
     except Exception as exc:
         db_status = f"error: {type(exc).__name__}"
 

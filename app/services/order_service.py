@@ -24,6 +24,12 @@ from app.services.phone_normalizer import normalize_jordanian_phone, PhoneValida
 from app.services.price_calculator import calculate_order_totals, OrderPriceSummary
 from app.services.product_service import ProductService, normalize_arabic_text
 
+# Customer-typed fields are fed back into the AI prompt and the courier report,
+# so cap them: no essay-length "addresses" carrying instructions for the bot
+MAX_NAME_LENGTH = 100
+MAX_ADDRESS_LENGTH = 300
+MAX_QUANTITY = 100
+
 REQUIRED_SLOTS = ("products", "customer_name", "customer_phone", "governorate", "address_detail")
 
 # Arabic confirmation affirmative keywords
@@ -163,7 +169,10 @@ class OrderService:
                     prod = self.product_service.match_product_by_name(store_id, p["name_match"])
 
                 if prod and prod.get("is_active", True):
-                    qty = int(p.get("quantity") or 1)
+                    try:
+                        qty = min(int(p.get("quantity") or 1), MAX_QUANTITY)
+                    except (TypeError, ValueError):
+                        qty = 1
                     if qty > 0:
                         validated_products.append({
                             "product_id": prod["id"],
@@ -176,7 +185,7 @@ class OrderService:
 
         # 2. Customer Name
         if new_slots.get("customer_name"):
-            name = str(new_slots["customer_name"]).strip()
+            name = str(new_slots["customer_name"]).strip()[:MAX_NAME_LENGTH]
             if len(name) >= 2:
                 merged["customer_name"] = name
 
@@ -197,7 +206,7 @@ class OrderService:
 
         # 5. Address Detail
         if new_slots.get("address_detail"):
-            addr = str(new_slots["address_detail"]).strip()
+            addr = str(new_slots["address_detail"]).strip()[:MAX_ADDRESS_LENGTH]
             if len(addr) >= 3:
                 merged["address_detail"] = addr
 

@@ -8,22 +8,18 @@ Verifies:
 5. Health check endpoint reporting database connectivity.
 """
 
-from decimal import Decimal
 import os
 import re
 from unittest.mock import MagicMock
 import pytest
 from starlette.testclient import TestClient
 
-from app.config import Settings, get_settings
+from app.config import get_settings
 from app.db.client import get_supabase_anon_client, get_supabase_client
 from app.db.repositories.notification_settings import NotificationSettingRepository
-from app.db.repositories.orders import OrderRepository
-from app.db.repositories.products import ProductRepository
 from app.main import app
 from app.models.notification_setting import (
     NotificationSettingCreate,
-    NotificationSettingRead,
     NotificationSettingUpdate,
 )
 
@@ -177,7 +173,8 @@ def test_public_pages_do_not_leak_privileged_secrets(client: TestClient):
 
     assert settings.supabase_service_role_key not in html
     assert "service_role" not in html
-    assert settings.app_secret_key not in html
+    assert settings.internal_api_token not in html
+    assert settings.meta_app_secret not in html
 
 
 def test_notification_settings_pydantic_model_validation():

@@ -43,9 +43,7 @@ def normalize_jordanian_phone(raw_phone: str) -> str:
     # Step 1: Convert Eastern Arabic and Arabic-Indic numerals to standard ASCII
     clean = raw_phone.translate(ARABIC_INDIC_DIGITS).translate(EASTERN_ARABIC_DIGITS)
 
-    # Step 2: Remove all non-digit characters (except leading + for prefix handling)
-    clean = clean.strip()
-    has_plus = clean.startswith("+")
+    # Step 2: Remove all non-digit characters
     digits = re.sub(r"\D", "", clean)
 
     if not digits:

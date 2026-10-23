@@ -2,7 +2,7 @@
 Application configuration loaded from environment variables.
 
 Uses Pydantic Settings for type-safe env parsing with validation.
-All secrets come from env vars (Cloud Run Secret Manager in production).
+All secrets come from env vars (Render dashboard in production, .env locally).
 """
 
 import sys
@@ -54,10 +54,9 @@ class Settings(BaseSettings):
     internal_api_token: str = ""
 
     # --- Application ---
-    app_env: str = "development"
-    app_debug: bool = True
-    app_secret_key: str = "change-me-to-a-random-string-at-least-32-chars"
-    app_port: int = 8080
+    # Defaults to production so a missing APP_ENV never enables the dev login
+    # bypass or the API docs; set APP_ENV=development in your local .env.
+    app_env: str = "production"
     # Public URL of this app; used to build links in password-reset / email-change emails.
     # Must also be listed in Supabase → Auth → URL Configuration → Redirect URLs.
     app_base_url: str = "http://localhost:8080"
@@ -66,9 +65,6 @@ class Settings(BaseSettings):
     @classmethod
     def clean_app_base_url(cls, v: str) -> str:
         return v.strip().rstrip("/") if isinstance(v, str) else v
-
-    # --- Webhook Processing ---
-    webhook_async_mode: bool = False
 
     # --- Human-like replies ---
     # typing_on + a short pause before each reply; always off under pytest

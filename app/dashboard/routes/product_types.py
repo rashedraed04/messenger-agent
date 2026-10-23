@@ -57,6 +57,7 @@ def list_product_types(
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/product_types/list.html",
         {
             "request": request,

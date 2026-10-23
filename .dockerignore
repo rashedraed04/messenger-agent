@@ -1,0 +1,25 @@
+# Keep secrets, local tooling and caches out of the Docker build context
+.env
+.env.*
+!.env.example
+.git/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.agents/
+.claude/
+.impeccable/
+.vscode/
+.idea/
+.mcp.json
+agent_workspace.md
+terminal_commands.txt
+skills-lock.json
+tests/
+scripts/
+migrations/

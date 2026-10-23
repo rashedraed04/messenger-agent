@@ -5,7 +5,7 @@ Product Pydantic v2 models.
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 class ProductBase(BaseModel):

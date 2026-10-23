@@ -13,8 +13,7 @@ dependencies = [
     "fastapi==0.115.6",
     "uvicorn[standard]==0.34.0",
     "python-multipart==0.0.20",
-    "starlette-csrf==3.0.0",
-    "supabase>=2.13.0",
+    "supabase==2.16.0",
     "google-genai==1.14.0",
     "httpx==0.28.1",
     "Jinja2==3.1.5",
@@ -39,6 +38,14 @@ python_files = ["test_*.py"]
 python_functions = ["test_*"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# Deprecations raised inside third-party packages (supabase, starlette); our own code stays warning-free
+filterwarnings = [
+    "ignore:The `gotrue` package is deprecated:DeprecationWarning",
+    "ignore:The `supafunc` package is deprecated:DeprecationWarning",
+    "ignore:The 'timeout' parameter is deprecated:DeprecationWarning",
+    "ignore:The 'verify' parameter is deprecated:DeprecationWarning",
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning",
+]
 
 [tool.ruff]
 target-version = "py311"

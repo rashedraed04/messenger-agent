@@ -4,12 +4,8 @@ Unit and integration tests for Meta Messenger webhook handler.
 
 import hashlib
 import hmac
-import json
 from unittest.mock import AsyncMock, MagicMock
-from fastapi.testclient import TestClient
-import pytest
 
-from app.main import app
 from app.messenger.webhook_handler import verify_hub_signature
 
 

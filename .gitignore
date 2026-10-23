@@ -13,11 +13,10 @@ build/
 venv/
 env/
 
-# Environment variables & secrets
+# Environment variables & secrets (only the template is committed)
 .env
-.env.local
-.env.production
-.env.backup
+.env.*
+!.env.example
 
 # IDE
 .vscode/
@@ -31,8 +30,9 @@ env/
 Thumbs.db
 desktop.ini
 
-# Testing
+# Testing & linting
 .pytest_cache/
+.ruff_cache/
 htmlcov/
 .coverage
 coverage.xml
@@ -40,8 +40,10 @@ coverage.xml
 # Docker
 docker-compose.override.yml
 
-# Logs
+# Logs & local databases
 *.log
+*.db
+*.sqlite3
 
 # Agents / Gemini workspace
 .agents/

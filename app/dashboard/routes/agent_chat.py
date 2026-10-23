@@ -11,7 +11,7 @@ import binascii
 import logging
 import uuid
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 from supabase import Client
@@ -181,6 +181,7 @@ def show_agent_chat_studio(
 
     templates = request.app.state.templates
     response = templates.TemplateResponse(
+        request,
         "dashboard/agent_chat.html",
         {
             "request": request,

@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, R
 from supabase import Client
 
 from app.ai.gemini_provider import GeminiProvider
-from app.config import Settings, get_settings
+from app.config import Settings
 from app.db.repositories.conversations import ConversationRepository
 from app.db.repositories.customers import CustomerRepository
 from app.db.repositories.faqs import FAQRepository

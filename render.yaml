@@ -4,26 +4,28 @@
 services:
   - type: web
     name: messenger-agent
-    runtime: docker
+    runtime: python
     plan: free
     region: frankfurt
-    dockerfilePath: ./Dockerfile
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    # --forwarded-allow-ips="*" trusts Render's proxy headers so redirects and
+    # url_for() links stay on https:// behind its load balancer
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
     healthCheckPath: /health
     autoDeploy: true
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
       - key: APP_ENV
         value: production
-      - key: APP_DEBUG
-        value: "false"
       # Set to this service's URL after the first deploy, e.g. https://messenger-agent.onrender.com
       - key: APP_BASE_URL
         sync: false
+      # Numeric ID of the Facebook Page customers message (used for m.me links)
       - key: FACEBOOK_PAGE_ID
-        value: "1422458150947777"
+        sync: false
       - key: GEMINI_MODEL
         value: gemini-3.5-flash
-      - key: WEBHOOK_ASYNC_MODE
-        value: "false"
       - key: ENABLE_TYPING_DELAY
         value: "true"
       - key: SUPABASE_URL
@@ -44,5 +46,6 @@ services:
         sync: false
       - key: TELEGRAM_CHAT_ID
         sync: false
+      # Render generates a random value; copy it into the cron-job.org report job header
       - key: INTERNAL_API_TOKEN
-        sync: false
+        generateValue: true

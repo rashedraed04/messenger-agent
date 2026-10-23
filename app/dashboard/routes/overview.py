@@ -43,6 +43,7 @@ def show_dashboard_overview(
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/index.html",
         {
             "request": request,

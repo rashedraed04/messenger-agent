@@ -41,6 +41,7 @@ NOTICES = {
 def _render(request: Request, user: dict[str, Any], status_code: int = 200, **context: Any):
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "dashboard/account.html",
         {
             "request": request,

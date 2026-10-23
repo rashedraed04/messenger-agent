@@ -45,6 +45,7 @@ LOGIN_NOTICES = {
 def _render(request: Request, template: str, context: dict, status_code: int = 200):
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         template,
         {"request": request, **context},
         status_code=status_code,

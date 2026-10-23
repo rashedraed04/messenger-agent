@@ -1,257 +1,255 @@
 # 🌹 متجر هدايا الحج والعمرة — مساعد مبيعات فيسبوك ماسنجر ولوحة التحكم
-### Jordanian Hajj & Umrah Gifts Store — Facebook Messenger AI Sales Agent & RTL Dashboard
+### Hajj & Umrah Gifts Store — Facebook Messenger AI Sales Agent & RTL Dashboard
 
-نظام متكامل لأتمتة مبيعات متجر بضائع وهدايا الحج والعمرة في الأردن عبر Facebook Messenger بالذكاء الاصطناعي (Gemini) وباللهجة الأردنية الطبيعية، مع لوحة تحكم عربية كاملة (RTL) لإدارة المنتجات والمحادثات، وتقرير يومي على تيليجرام بطلبات اليوم لتسليمها لشركة التوصيل.
-
----
-
-## 📑 المحتويات (Table of Contents)
-- [المميزات الرئيسية](#-المميزات-الرئيسية)
-- [المخطط المعماري](#-المخطط-المعماري)
-- [التقنيات المستخدمة](#-التقنيات-المستخدمة)
-- [هيكل المشروع](#-هيكل-المشروع)
-- [التشغيل والإعداد المحلي](#-التشغيل-والإعداد-المحلي)
-- [قاعدة البيانات والترحيل (Supabase)](#-قاعدة-البيانات-والترحيل-supabase)
-- [حساب المدير: البريد وكلمة المرور](#-حساب-المدير-البريد-وكلمة-المرور)
-- [ربط فيسبوك ماسنجر (Meta Platform)](#-ربط-فيسبوك-ماسنجر-meta-platform)
-- [التقارير اليومية وتيليجرام](#-التقارير-اليومية-وتيليجرام)
-- [النشر على Google Cloud Run](#-النشر-على-google-cloud-run)
-- [الفحوصات والاختبارات (Automated Tests)](#-الفحوصات-والاختبارات)
+نظام متكامل لأتمتة مبيعات متجر بضائع وهدايا الحج والعمرة في الأردن عبر Facebook Messenger بالذكاء الاصطناعي (Gemini) وباللهجة الأردنية، مع واجهة متجر عامة (بدون أسعار)، ولوحة تحكم عربية (RTL) لإدارة المنتجات والمحادثات، وتقرير يومي على تيليجرام بطلبات اليوم لتسليمها لشركة التوصيل.
 
 ---
 
-## ✨ المميزات الرئيسية
-
-1. **محادثة طبيعية باللهجة الأردنية:**
-   - يفهم العبارات والمصطلحات الأردنية ("يا هلا"، "بدي سجادة صلاة"، "كم واصل لإربد"، "اعتمد الطلب").
-   - اقتراح ذكي للمنتجات من الكتالوج الفعلي فقط مع منع تام لاختلاق منتجات غير متوفرة أو تعديل الأسعار.
-   - يتعرف على المنتج من صورة يبعثها الزبون، بمقارنتها بصور وأسماء منتجات الكتالوج.
-   - تنبيه فوري على تيليجرام لما يكون الزبون معصّب أو زعلان، مع رابط صندوق رسائل الصفحة.
-2. **جمع الطلبات المرن (Step-by-Step أو All-at-Once):**
-   - يدعم إرسال الزبون لكل التفاصيل دفعة واحدة (الاسم، الهاتف، المحافظة، العنوان) ويقفز مباشرة إلى ملخص التأكيد.
-   - يدعم جمع البيانات خطوة بخطوة في حال أرسلها الزبون مجزأة.
-3. **حساب مالي دقيق بالدينار الأردني (JOD):**
-   - العمليات الحسابية تتم برمجياً عبر بايثون حصراً (وليس عبر الذكاء الاصطناعي) بدقة 3 خانات عشرية (فلس).
-   - رسوم توصيل ثابتة لكل المحافظات الـ 12 (رسوم شركة التوصيل) تُحدد من صفحة الإعدادات.
-4. **تطبيع والتحقق من أرقام الهواتف الأردنية:**
-   - تحويل الأرقام المكتوبة بالأرقام الهندية (٠-٩) وصيغ الدولي (+962, 00962) إلى الصيغة القياسية (07XXXXXXXX لزين، أورنج، أمنية).
-5. **لوحة تحكم عربية بالكامل (Bootstrap 5 RTL):**
-   - واجهة مريحة لصاحب المتجر بدون الحاجة لكتابة كود.
-   - إدارة المنتجات (بدون كميات مخزون)، ومحاكي لتجربة البوت (مع إرفاق صور).
-6. **تقرير يومي عبر تيليجرام لتسليم الطلبات لشركة التوصيل (الساعة 10:00 مساءً):**
-   - تقرير منسق يوضح الطلبات المؤكدة اليومية، تفاصيل المستلم وعنوانه، والمبلغ المطلوب تحصيله كاش (دفع عند الاستلام).
-7. **حماية مجانية Supabase من الإيقاف التلقائي:**
-   - فحص دوري يومي عبر `/health` و `/internal/daily-report` يمنع دخول قاعدة البيانات في وضع السكون (Auto-pause).
+## 📑 المحتويات
+1. [نظرة عامة والمخطط المعماري](#1--نظرة-عامة-والمخطط-المعماري)
+2. [التشغيل المحلي والاختبارات](#2--التشغيل-المحلي-والاختبارات)
+3. [النشر على Render.com و cron-job.org](#3--النشر-على-rendercom-و-cron-joborg)
+4. [الانتقال من صفحة فيسبوك التجريبية إلى صفحة المتجر الحقيقية](#4--الانتقال-من-صفحة-فيسبوك-التجريبية-إلى-صفحة-المتجر-الحقيقية)
+5. [مراجع: قاعدة البيانات، حساب المدير، الأمان](#5--مراجع)
 
 ---
 
-## 🏛️ المخطط المعماري
+## 1. 🏛️ نظرة عامة والمخطط المعماري
+
+### ماذا يفعل النظام؟
+- **بوت ماسنجر باللهجة الأردنية:** يقترح منتجات من الكتالوج الفعلي فقط، يتعرف على المنتج من صورة يرسلها الزبون، ويجمع بيانات الطلب (الاسم، الهاتف، المحافظة، العنوان) دفعة واحدة أو خطوة بخطوة.
+- **حساب الأسعار برمجياً بالدينار (JOD):** بدقة 3 خانات عشرية، مع رسوم توصيل ثابتة من صفحة الإعدادات. الذكاء الاصطناعي لا يحسب الأسعار أبداً.
+- **تطبيع أرقام الهواتف الأردنية:** يحوّل الأرقام الهندية (٠-٩) وصيغ +962 / 00962 إلى الصيغة 07XXXXXXXX.
+- **واجهة متجر عامة (`/`):** تعرض المنتجات **بدون أي أسعار** (لا في HTML ولا في `/api/public/products`)، وزر "اسأل عن السعر عبر ماسنجر".
+- **لوحة تحكم (`/dashboard`):** المنتجات، الفئات، الأنواع، الأسئلة الشائعة، محاكي البوت، التقارير، الإعدادات، وحساب المدير.
+- **تيليجرام:** تقرير يومي بالطلبات المؤكدة (9:00 مساءً بتوقيت عمّان) + تنبيه فوري عند زبون منزعج.
+
+### المخطط
 
 ```mermaid
 graph TB
-    subgraph "الزبون والمنصات الخارجية"
+    subgraph "خارجي"
         META["فيسبوك ماسنجر (Meta)"]
         GEMINI["Google Gemini API"]
         TELEGRAM["بوت تيليجرام"]
+        CRON["cron-job.org"]
     end
 
-    subgraph "Google Cloud Run (us-central1)"
-        WH["مستقبل الويب هوك /webhook"]
-        SM["آلة حالات الطلب (Order State Machine)"]
-        CALC["حاسبة الأسعار بالدينار (Price Calc)"]
-        DASH["لوحة التحكم /dashboard"]
-        CRON["مجدول التقارير /internal/daily-report"]
+    subgraph "Render.com (Frankfurt, Free)"
+        WH["/webhook"]
+        SHOP["/ واجهة المتجر"]
+        DASH["/dashboard"]
+        HEALTH["/health"]
+        REPORT["/internal/daily-report"]
     end
 
-    subgraph "Supabase"
-        DB[("قاعدة بيانات PostgreSQL")]
+    subgraph "Supabase (Free)"
+        DB[("PostgreSQL")]
         AUTH["Supabase Auth"]
+        STORAGE["Storage: صور المنتجات"]
     end
 
-    META -->|"POST /webhook (HMAC verified)"| WH
-    WH -->|"استخراج وتوليد الرد"| GEMINI
-    WH -->|"فحص وتحقق من الحقول"| SM
-    SM -->|"حساب الأسعار والتوصيل"| CALC
-    WH -->|"إرسال الرد عبر Send API"| META
+    META -->|"POST موقّع HMAC-SHA256"| WH
+    WH --> GEMINI
+    WH -->|"الرد عبر Send API"| META
     WH --> DB
-
-    DASH -->|"مصادقة الجلسة"| AUTH
-    DASH -->|"إدارة المنتجات والمحادثات"| DB
-
-    CRON -->|"استعلام الطلبات اليومية المؤكدة"| DB
-    CRON -->|"إرسال طلبات اليوم لتسليمها لشركة التوصيل"| TELEGRAM
+    SHOP --> DB
+    DASH --> AUTH
+    DASH --> DB
+    DASH --> STORAGE
+    CRON -->|"كل 14 دقيقة"| HEALTH
+    HEALTH -->|"استعلام خفيف يُبقي القاعدة نشطة"| DB
+    CRON -->|"يومياً 21:00 عمّان + X-Internal-Token"| REPORT
+    REPORT --> DB
+    REPORT --> TELEGRAM
 ```
 
----
+### التقنيات
+Python 3.11 · FastAPI · Jinja2 + Bootstrap 5 RTL · Supabase (PostgreSQL + Auth + Storage) · Google Gemini (`google-genai`) · Meta Graph API · Telegram Bot API · Render.com · cron-job.org
 
-## 🛠️ التقنيات المستخدمة
-
-- **لغة البرمجة:** Python 3.11+
-- **إطار العمل الخلفي:** FastAPI
-- **قاعدة البيانات والمصادقة:** Supabase (PostgreSQL + Supabase Auth)
-- **محرك الذكاء الاصطناعي:** Google Gemini 2.5 Flash (`google-genai` SDK)
-- **واجهة لوحة التحكم:** HTML5 + Jinja2 + Bootstrap 5 RTL + CSS3 Custom Theme
-- **منصة المراسلة:** Meta Messenger Graph API v21.0
-- **التقارير اليومية:** Telegram Bot API
-- **بيئة النشر السحابي:** Google Cloud Run (Region: `us-central1` Free Tier)
-- **الجدولة السحابية:** Google Cloud Scheduler
-
----
-
-## 📁 هيكل المشروع
-
+### هيكل المشروع
 ```
 Messenger_Agent/
 ├── app/
-│   ├── ai/                    # تكامل مزود الذكاء الاصطناعي (Gemini) وبناء التوجيهات
-│   ├── dashboard/             # مسارات ولوحة تحكم المتجر (Auth, Products, Conversations, ...)
-│   ├── db/                    # عميل Supabase ومستودعات البيانات (Repositories)
-│   ├── messenger/             # معالج Webhook و Send API وتحقق HMAC والتكرار
-│   ├── models/                # نماذج Pydantic v2
-│   ├── routes/                # نقاط النهاية الرئيسية (health, webhook, internal)
-│   ├── services/              # منطق الأعمال (Order Machine, Price Calc, Normalizer)
-│   ├── telegram/              # التقرير اليومي وتنبيهات الزبائن المنزعجين على تيليجرام
-│   ├── templates/             # قوالب Jinja2 العربية (RTL)
-│   ├── config.py              # إعدادات Pydantic Settings
-│   └── main.py                # نقطة تشغيل التطبيق Lifespan
-├── deploy/                    # ملفات النشر على Cloud Run و Cloud Scheduler
-├── migrations/                # ملفات SQL لإنشاء الجداول والبيانات الأولية
-├── scripts/                   # سكريبت البذور ومحاكي المحادثة المحلي
-├── static/                    # ملفات CSS و JS الخاصة بلوحة التحكم
-└── tests/                     # 39 فحص واختبار مؤتمت بالكامل
+│   ├── ai/            # مزود Gemini، بناء التعليمات، تحليل الرد
+│   ├── dashboard/     # مسارات لوحة التحكم، الجلسات، CSRF، تحديد المحاولات
+│   ├── db/            # عميل Supabase والمستودعات (Repositories)
+│   ├── messenger/     # معالج Webhook، Send API، التحقق من التوقيع
+│   ├── models/        # نماذج Pydantic
+│   ├── routes/        # health, webhook, internal, storefront
+│   ├── services/      # منطق الأعمال (الطلبات، الأسعار، الهواتف، التقارير)
+│   ├── telegram/      # التقرير اليومي والتنبيهات
+│   ├── templates/     # قوالب Jinja2 العربية
+│   ├── config.py      # الإعدادات من متغيرات البيئة
+│   └── main.py        # إنشاء التطبيق
+├── migrations/        # ملفات SQL مرقمة (001 → 009)
+├── scripts/           # محاكي المحادثة المحلي + بيانات منتجات تجريبية
+├── static/            # CSS / JS / الشعار
+├── tests/             # اختبارات pytest
+├── render.yaml        # إعداد النشر على Render بنقرة واحدة
+├── Dockerfile         # بديل للنشر عبر Docker
+└── .env.example       # قالب متغيرات البيئة مع شرح كل مفتاح
 ```
 
 ---
 
-## 🚀 التشغيل والإعداد المحلي
+## 2. 🚀 التشغيل المحلي والاختبارات
 
-### 1. إنشاء البيئة الافتراضية وتثبيت الاعتماديات:
+### المتطلبات
+- Python 3.11 أو أحدث
+- مشروع Supabase (مجاني) طُبّقت عليه ملفات `migrations/` (انظر [قاعدة البيانات](#قاعدة-البيانات-supabase))
+
+### الإعداد
 ```bash
 python -m venv .venv
-# على ويندوز:
+# ويندوز:
 .venv\Scripts\activate
-# على لينكس/ماك:
+# لينكس/ماك:
 source .venv/bin/activate
 
 pip install -r requirements.txt
+cp .env.example .env      # ثم املأ القيم؛ كل مفتاح مشروح داخل الملف
 ```
 
-### 2. إعداد ملف المتغيرات `.env`:
-انسخ `.env.example` إلى `.env` واملأ بياناتك:
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+> اترك `APP_ENV=development` في ملف `.env` المحلي. إذا لم يُضبط هذا المتغير، يعمل التطبيق افتراضياً كـ **production** (أكثر أماناً).
 
-GEMINI_API_KEY=your-gemini-api-key
-GEMINI_MODEL=gemini-2.5-flash
-
-META_APP_SECRET=your-meta-app-secret
-META_PAGE_ACCESS_TOKEN=your-meta-page-access-token
-META_VERIFY_TOKEN=your-meta-verify-token
-
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-TELEGRAM_CHAT_ID=your-telegram-chat-id
-
-INTERNAL_API_TOKEN=your-internal-secure-token
-```
-
-### 3. تشغيل السيرفر محلياً:
+### التشغيل
 ```bash
 uvicorn app.main:app --reload --port 8080
 ```
-- لوحة التحكم: [http://localhost:8080/dashboard](http://localhost:8080/dashboard)
-- فحص الصحة: [http://localhost:8080/health](http://localhost:8080/health)
+- واجهة المتجر: http://localhost:8080/
+- لوحة التحكم: http://localhost:8080/dashboard
+- توثيق الـ API (في وضع التطوير فقط): http://localhost:8080/docs
+- فحص الصحة: http://localhost:8080/health
 
-*(في وضع التطوير المحلي يمكنك الدخول بـ `admin@perfumestore.jo` وكلمة المرور `admin123`).*
+في وضع التطوير فقط يمكن الدخول للوحة بـ `admin@perfumestore.jo` / `admin123` بدون Supabase Auth. **هذا الدخول معطّل تماماً في production.**
 
-### 4. تجربة المحادثة مع البوت محلياً (CLI Simulator):
-بدون الحاجة لربط فيسبوك بعد، يمكنك تجربة التحدث مع البوت وتجربة تدفق الطلبات:
+### تجربة البوت بدون فيسبوك
 ```bash
 python scripts/test_messenger_locally.py
 ```
+أو من لوحة التحكم: **محاكي البوت**. طلبات المحاكي تُعلَّم كتجريبية ولا تظهر في تقرير التوصيل.
 
----
-
-## 🗄️ قاعدة البيانات والترحيل (Supabase)
-
-تم بناء قاعدة البيانات وفق أفضل الممارسات المعتمدة من Supabase:
-- الترحيلات متوفرة في مجلد `migrations/`:
-  1. `001_initial_schema.sql`: ينشئ 12 جدولاً بـ UUIDs و RLS وقيود مركبة لعزل المتاجر ومؤشرات جزئية وفهارس للبحث.
-  2. `002_seed_data.sql`: يزرع شخصية البوت والأسئلة الشائعة (ومناطق التوصيل القديمة التي يحذفها الترحيل 005).
-  3. `003_product_categories.sql`: ينشئ جدول فئات المنتجات (`product_categories`) الذي تديره لوحة التحكم ويتحكم بفلاتر المتجر العام، ويزرع الفئات الافتراضية والفئات المستخدمة حالياً.
-  4. `004_product_types.sql`: ينشئ جدول أنواع المنتجات.
-  5. `005_drop_delivery_zones.sql`: يحذف مناطق التوصيل لكل محافظة (التوصيل صار برسوم ثابتة من الإعدادات).
-- لتطبيقها: انسخ محتوى الملفات بالترتيب والصقها في **Supabase Dashboard → SQL Editor** واضغط Run.
-
----
-
-## 🔐 حساب المدير: البريد وكلمة المرور
-
-من صفحة **الحساب والأمان** (`/dashboard/account`) يستطيع المدير:
-- **تغيير البريد الإلكتروني:** يتطلب كلمة المرور الحالية، ويرسل Supabase رابط تأكيد مجاني إلى البريد الجديد (مثل Gmail). لا يتغير البريد إلا بعد الضغط على الرابط، وهذا يثبت ملكية البريد.
-- **تغيير كلمة المرور:** يتطلب كلمة المرور الحالية، ويسجّل الخروج من جميع الأجهزة الأخرى.
-- **نسيت كلمة المرور؟** من صفحة الدخول (`/auth/forgot-password`): يُرسل رابط استعادة لمرة واحدة صالح لمدة ساعة إلى البريد.
-
-الحماية: CSRF على كل النماذج، تحديد عدد المحاولات (الدخول، كلمة المرور الحالية، رسائل الاستعادة)، رد موحّد لا يكشف وجود الحساب، إبطال الجلسات بعد تغيير/استعادة كلمة المرور، وعدم تخزين الصفحات في الكاش.
-
-### إعداد Supabase (مرة واحدة)
-1. **Authentication → URL Configuration:**
-   - **Site URL:** رابط التطبيق (نفس قيمة `APP_BASE_URL`).
-   - **Redirect URLs:** أضف `https://YOUR-APP-URL/auth/**` (و `http://localhost:8080/auth/**` للتجربة المحلية).
-2. **إرسال الرسائل مجاناً عبر Gmail (Authentication → Emails → SMTP Settings):** خادم Supabase الافتراضي يرسل فقط لأعضاء فريق المشروع وبحد رسالتين تقريباً في الساعة، لذلك فعّل **Custom SMTP** مجاناً بحساب Gmail:
-   - فعّل التحقق بخطوتين في حساب Google، ثم أنشئ **App Password** من [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
-   - Host: `smtp.gmail.com` — Port: `587` — Username: بريد Gmail — Password: كلمة مرور التطبيق (16 حرفاً) — Sender email: نفس البريد.
-3. **Authentication → Providers → Email:** إذا كان البريد الحالي للمدير غير حقيقي (لا يستقبل رسائل)، أوقف **Secure email change** مؤقتاً، لأنه يطلب تأكيد الرابط من البريد القديم والجديد معاً. أعد تفعيله بعد الانتقال إلى Gmail.
-
----
-
-## 📱 ربط فيسبوك ماسنجر (Meta Platform)
-
-1. أنشئ تطبيقاً على [developers.facebook.com](https://developers.facebook.com) من نوع **Business**.
-2. أضف منتج **Messenger**.
-3. في إعدادات Webhooks:
-   - **Callback URL:** `https://your-domain.com/webhook`
-   - **Verify Token:** القيمة المحددة في `META_VERIFY_TOKEN`.
-   - اشترك في الأحداث: `messages`, `messaging_postbacks`, `messaging_handovers`.
-4. اربط صفحة الفيسبوك الخاصة بمتجرك واستخرج **Page Access Token**.
-5. ملاحظة هامة: يجب تقديم التطبيق لمراجعة **Meta App Review** للحصول على صلاحية `pages_messaging` (Advanced Access) قبل إتاحته لعامة الزبائن.
-
----
-
-## 🚚 التقارير اليومية وتيليجرام
-
-يتم تجميع كافة الطلبات المؤكدة لليوم الحالي (بتوقيت عمّان Asia/Amman) وإرسالها على تيليجرام، جاهزة لتسليمها لشركة التوصيل.
-- يمكن إرسال التقرير فوراً يدوياً من لوحة التحكم: **التقارير → إرسال تقرير اليوم الآن**.
-- يتم أتمتته يومياً عبر Cloud Scheduler على الرابط:
-  `POST /internal/daily-report` مع هيدر التوثيق `X-Internal-Token`.
-
----
-
-## ☁️ النشر على Google Cloud Run
-
+### الاختبارات
 ```bash
-# 1. بناء ونشر الصورة عبر Google Cloud Build
-gcloud builds submit --config=deploy/cloudbuild.yaml
-
-# 2. جدولة تقرير تيليجرام اليومي في تمام 10:00 مساءً بتوقيت عمّان
-bash deploy/cloud-scheduler.sh
+pytest            # كل الاختبارات (لا تحتاج اتصالاً بـ Supabase أو Meta)
+make test-cov     # مع تقرير التغطية
 ```
 
 ---
 
-## 🧪 الفحوصات والاختبارات
+## 3. ☁️ النشر على Render.com و cron-job.org
 
-تم بناء 39 اختبار فحص مؤتمت تغطي كافة طبقات النظام:
+### الخطوة 1: رفع المشروع إلى GitHub
+تأكد أن `.env` غير مرفوع (`git status` يجب ألا يظهره؛ هو مُستثنى في `.gitignore`).
+
+### الخطوة 2: إنشاء الخدمة على Render
+1. ادخل [dashboard.render.com](https://dashboard.render.com) → **New → Blueprint** → اختر المستودع.
+2. يقرأ Render ملف `render.yaml` تلقائياً: خدمة Web، Python 3.11.9، منطقة Frankfurt، الخطة المجانية، فحص صحة على `/health`.
+3. سيطلب منك Render قيم الأسرار (المعلَّمة `sync: false`). انسخها من `.env` المحلي أو من مصادرها (الشرح داخل `.env.example`):
+
+   | المتغير | من أين |
+   |---|---|
+   | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API |
+   | `GEMINI_API_KEY` | aistudio.google.com/apikey |
+   | `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN`, `META_VERIFY_TOKEN` | تطبيق Meta (انظر القسم 4) |
+   | `FACEBOOK_PAGE_ID` | الرقم التعريفي لصفحة فيسبوك |
+   | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | @BotFather و getUpdates |
+   | `APP_BASE_URL` | اتركه فارغاً الآن، واملأه بعد أول نشر |
+
+   `INTERNAL_API_TOKEN` يولّده Render تلقائياً بقيمة عشوائية.
+4. بعد أول نشر ناجح، انسخ رابط الخدمة (مثل `https://messenger-agent.onrender.com`) وضعه في `APP_BASE_URL` ضمن **Environment**، ثم أضف `https://YOUR-APP.onrender.com/auth/**` في Supabase → Authentication → URL Configuration → Redirect URLs.
+5. تحقق: افتح `https://YOUR-APP.onrender.com/health`، يجب أن ترى `"status": "healthy"` و `"database": "connected"`.
+
+> **ملاحظات Render المجاني:** الخدمة تنام بعد 15 دقيقة بلا زيارات (لهذا نستخدم cron-job.org)، والخطة تعطي 750 ساعة شهرياً، وهذا يكفي خدمة واحدة تعمل 24/7. أمر التشغيل يتضمن `--proxy-headers --forwarded-allow-ips="*"` كي تبقى الروابط والتحويلات على `https://` خلف موزّع Render.
+
+### الخطوة 3: ربط Webhook ماسنجر
+في تطبيق Meta → Messenger → Webhooks:
+- **Callback URL:** `https://YOUR-APP.onrender.com/webhook`
+- **Verify Token:** نفس قيمة `META_VERIFY_TOKEN`
+- اشترك في: `messages`, `messaging_postbacks`
+
+### الخطوة 4: مهام cron-job.org (مجاني)
+أنشئ حساباً على [cron-job.org](https://cron-job.org) ثم أنشئ مهمتين:
+
+**أ) إبقاء الخادم وقاعدة البيانات مستيقظين**
+- **URL:** `https://YOUR-APP.onrender.com/health`
+- **Schedule:** Custom → `*/14 * * * *` (كل 14 دقيقة)
+- **Method:** GET
+
+هذا يمنع Render من إيقاف الخدمة، ويُجري استعلاماً خفيفاً على Supabase يمنع إيقاف المشروع المجاني بعد 7 أيام بلا نشاط. `/health` يرد دائماً خلال 5 ثوانٍ كحد أقصى.
+
+**ب) التقرير اليومي على تيليجرام الساعة 9:00 مساءً**
+- **URL:** `https://YOUR-APP.onrender.com/internal/daily-report`
+- **Schedule:** Every day at **21:00**، و **Time zone: Asia/Amman** (من إعدادات المهمة)
+- **Advanced → Request method:** POST
+- **Advanced → Headers:** `X-Internal-Token` = قيمة `INTERNAL_API_TOKEN` (من Render → Environment)
+
+بدون الهيدر الصحيح يرفض الخادم الطلب (403)، وإذا كان `INTERNAL_API_TOKEN` فارغاً يرفض كل الطلبات (503). التقرير لا يُرسل مرتين لنفس اليوم، فإعادة المحاولة آمنة. يمكن إيقاف التقرير اليومي أو إرساله يدوياً من لوحة التحكم → **التقارير**.
+
+---
+
+## 4. 🔁 الانتقال من صفحة فيسبوك التجريبية إلى صفحة المتجر الحقيقية
+
+الصفحة التي يرد عليها البوت يحددها **متغيران في Render** فقط، ولا حاجة لتعديل الكود:
+- `META_PAGE_ACCESS_TOKEN`: صلاحية إرسال الردود باسم الصفحة.
+- `FACEBOOK_PAGE_ID`: يُستخدم في روابط "راسلنا على ماسنجر" (m.me) في واجهة المتجر وصفحة الخصوصية.
+
+### الخطوات
+1. **صلاحية الإدارة:** يجب أن يكون الحساب الذي يدير تطبيق Meta مديراً (Admin) لصفحة المتجر الحقيقية.
+2. **ربط الصفحة بالتطبيق:** developers.facebook.com → تطبيقك → Messenger → **API Settings** → **Add Page** واختر صفحة المتجر.
+3. **توليد Token جديد:** بجانب الصفحة اضغط **Generate token** وانسخه.
+4. **الاشتراك في الأحداث:** في نفس الصفحة، فعّل اشتراك الصفحة في `messages` و `messaging_postbacks`.
+5. **إلغاء اشتراك الصفحة التجريبية** من نفس القائمة، حتى لا تختلط رسائلها بطلبات المتجر الحقيقية (كل الصفحات المشتركة تُسجَّل على نفس المتجر).
+6. **تحديث Render:** Environment → عدّل:
+   - `META_PAGE_ACCESS_TOKEN` = الـ Token الجديد
+   - `FACEBOOK_PAGE_ID` = رقم صفحة المتجر (من الصفحة → About → Page transparency)
+
+   ثم **Save Changes**، فيعيد Render النشر تلقائياً خلال دقيقة أو اثنتين.
+7. **(اختياري للتوثيق)** في Supabase → Table Editor → `stores`، حدّث `facebook_page_id` إلى رقم الصفحة الجديدة. التطبيق حالياً لا يقرأ هذا العمود، لكنه يبقي البيانات متطابقة.
+8. **الإتاحة للعامة:** ليرد البوت على كل الزبائن (وليس فقط على مدراء التطبيق)، يجب أن يكون التطبيق في وضع **Live** مع صلاحية `pages_messaging` (Advanced Access) عبر **App Review**. رابط سياسة الخصوصية المطلوب: `https://YOUR-APP.onrender.com/privacy`.
+9. **اختبار:** أرسل رسالة لصفحة المتجر من حساب شخصي، وتأكد من وصول الرد، ثم تأكد أن روابط ماسنجر في واجهة المتجر تفتح الصفحة الصحيحة.
+
+> **مهم:** الـ Token المولَّد من Messenger API Settings لا تنتهي صلاحيته عادةً، لكنه يُلغى إذا غيّر مدير الصفحة كلمة المرور أو أزال صلاحيات التطبيق. إذا توقف البوت عن الرد فجأة، ولّد Token جديداً وحدّثه في Render.
+
+---
+
+## 5. 📚 مراجع
+
+### قاعدة البيانات (Supabase)
+طبّق الملفات بالترتيب من **Supabase Dashboard → SQL Editor** (انسخ والصق ثم Run):
+
+| الملف | الوظيفة |
+|---|---|
+| `001_initial_schema.sql` | الجداول، RLS، الفهارس |
+| `002_seed_data.sql` | المتجر الافتراضي، شخصية البوت، الأسئلة الشائعة |
+| `003_product_categories.sql` | فئات المنتجات وفلاتر المتجر |
+| `004_product_types.sql` | أنواع المنتجات |
+| `005_drop_delivery_zones.sql` | حذف مناطق التوصيل (صارت رسوماً ثابتة) |
+| `006_security_hardening.sql` | إصلاحات تنبيهات الأمان في Supabase |
+| `007_report_history_is_scheduled.sql` | تمييز التقارير المجدولة عن اليدوية |
+| `008_product_images_bucket.sql` | مخزن صور المنتجات |
+| `009_orders_is_test.sql` | تمييز طلبات المحاكي لاستبعادها من التقرير |
+
+### حساب المدير
+- **إنشاء الحساب:** Supabase → Authentication → Users → **Add user** (بريد + كلمة مرور).
+- **حساب عرض فقط (Demo):** أضف إلى `app_metadata` للمستخدم: `{"role": "demo"}`. يستطيع التصفح وتجربة المحاكي فقط.
+- من صفحة **الحساب والأمان** (`/dashboard/account`): تغيير البريد (برابط تأكيد) وكلمة المرور، ومن صفحة الدخول: **نسيت كلمة المرور؟**
+- **إعداد Supabase مرة واحدة:**
+  1. Authentication → URL Configuration: **Site URL** = `APP_BASE_URL`، و **Redirect URLs** تتضمن `https://YOUR-APP.onrender.com/auth/**` (و `http://localhost:8080/auth/**` للتجربة المحلية).
+  2. Authentication → Emails → SMTP Settings: فعّل **Custom SMTP** عبر Gmail (Host `smtp.gmail.com`، Port `587`، كلمة مرور تطبيق من [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)). الخادم الافتراضي محدود بحوالي رسالتين في الساعة.
+
+### الأمان في production
+- `/docs` و `/redoc` و `/openapi.json` مخفية.
+- الـ Webhook يرفض أي طلب بدون توقيع `X-Hub-Signature-256` صحيح.
+- `/internal/daily-report` محمي بـ `X-Internal-Token` (مقارنة ثابتة الزمن) ويرفض الكل إذا لم يُضبط.
+- الأخطاء غير المتوقعة تُعرض كصفحة/رسالة عربية بدون تفاصيل تقنية؛ التفاصيل في سجلات Render فقط.
+- السجلات لا تحتوي توكنات (Telegram/Meta/Supabase) ولا روابط استعلامات تحمل أرقام الزبائن.
+- CSRF على كل نماذج اللوحة، تحديد عدد محاولات الدخول، وكوكيز `Secure` و `HttpOnly`.
+- مفتاح `SUPABASE_SERVICE_ROLE_KEY` يُستخدم على الخادم فقط ولا يصل للمتصفح أبداً.
+
+### النشر عبر Docker (بديل)
 ```bash
-# تشغيل كامل الفحوصات
-pytest tests/ -v
+make docker-build
+make docker-run      # يقرأ .env ويفتح المنفذ 8080
 ```
-- `test_phone_normalizer.py`: فحص تطبيع الأرقام الأردنية والأرقام الهندية والبادئات.
-- `test_price_calculator.py`: فحص دقة الأسعار بالفلس (3 خانات) ورفض الكميات السالبة.
-- `test_order_state_machine.py`: فحص آلة الحالات، القفز المباشر، التأكيد، والإلغاء.
-- `test_product_service.py`: فحص مطابقة أسماء المنتجات العربية وفحص المخزون.
-- `test_ai_response_parser.py`: فحص استخراج JSON ومعالجة الحالات الاستثنائية.
-- `test_webhook_handler.py`: فحص توثيق توقيع HMAC وعدم تكرار الطلبات (Idempotency).
-- `test_report_service.py`: فحص تنسيق تقرير تيليجرام وإرساله.
-- `test_dashboard_routes.py`: فحص توجيه تسجيل الدخول وتصفح كافة صفحات اللوحة بنجاح.

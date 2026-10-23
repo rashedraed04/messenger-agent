@@ -5,7 +5,6 @@ Dashboard authentication and session middleware.
 import logging
 from typing import Any
 from fastapi import Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse
 
 from app.config import Settings, get_settings
 from app.db.client import get_supabase_anon_client

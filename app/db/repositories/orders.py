@@ -9,7 +9,7 @@ from typing import Any
 from dateutil import tz
 from supabase import Client
 
-from app.models.order import OrderCreate, OrderItemCreate, OrderStatus
+from app.models.order import OrderStatus
 
 AMMAN_TZ = tz.gettz("Asia/Amman") or timezone(timedelta(hours=3))
 

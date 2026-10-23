@@ -3,7 +3,7 @@ Pydantic v2 models for Meta Messenger Platform webhook events and Send API.
 """
 
 from typing import Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Sender(BaseModel):

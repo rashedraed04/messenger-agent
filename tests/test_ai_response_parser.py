@@ -2,7 +2,7 @@
 Unit tests for AI response parser.
 """
 
-from app.ai.response_parser import extract_json_block, parse_ai_response
+from app.ai.response_parser import parse_ai_response
 
 
 def test_clean_json_parsing():

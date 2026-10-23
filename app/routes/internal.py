@@ -1,12 +1,14 @@
 """
 Internal API endpoints.
 
-Secured by X-Internal-Token header (set by Cloud Scheduler).
+Secured by the X-Internal-Token header (sent by the cron-job.org job).
 These endpoints are NOT for external use.
 """
 
-from datetime import datetime, timezone
+import hmac
 import logging
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from supabase import Client
 
@@ -28,13 +30,13 @@ def verify_internal_token(
     x_internal_token: str = Header(...),
     config: Settings = Depends(get_config),
 ) -> None:
-    """Verify the internal API token from Cloud Scheduler."""
+    """Verify the internal API token sent by the scheduler; refuse everything if unset."""
     if not config.internal_api_token:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Internal API not configured",
         )
-    if x_internal_token != config.internal_api_token:
+    if not hmac.compare_digest(x_internal_token.encode(), config.internal_api_token.encode()):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid internal token",
@@ -51,7 +53,7 @@ async def trigger_daily_report(
     """
     Trigger the daily order report.
 
-    Called by Google Cloud Scheduler at 22:00 Asia/Amman.
+    Called by cron-job.org at 21:00 Asia/Amman.
     Also serves as a daily DB ping to prevent Supabase free-tier auto-pause.
     """
     store_id = config.default_store_id
@@ -96,5 +98,5 @@ async def trigger_daily_report(
         logger.exception("Daily report generation failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Report failed: {e}",
+            detail="Report failed; see server logs",
         )

@@ -16,8 +16,6 @@ os.environ.setdefault("SUPABASE_URL", "https://test-project.supabase.co")
 os.environ.setdefault("SUPABASE_ANON_KEY", "test-anon-key")
 os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key")
 os.environ.setdefault("APP_ENV", "testing")
-os.environ.setdefault("APP_DEBUG", "true")
-os.environ.setdefault("APP_SECRET_KEY", "test-secret-key-at-least-32-characters-long")
 os.environ.setdefault("META_VERIFY_TOKEN", "test-verify-token")
 os.environ.setdefault("META_APP_SECRET", "test-meta-secret")
 os.environ.setdefault("INTERNAL_API_TOKEN", "test-internal-token")
@@ -42,8 +40,6 @@ def test_settings() -> Settings:
         telegram_chat_id="test-chat-id",
         internal_api_token="test-internal-token",
         app_env="testing",
-        app_debug=True,
-        app_secret_key="test-secret-key-at-least-32-characters-long",
         default_store_id="00000000-0000-0000-0000-000000000001",
     )
 
