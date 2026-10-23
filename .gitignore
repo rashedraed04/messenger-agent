@@ -49,3 +49,6 @@ agent_workspace.md
 skills-lock.json
 .claude/
 terminal_commands.txt
+
+# Impeccable detector cache (local only)
+.impeccable/hook.cache.json

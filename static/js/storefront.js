@@ -11,6 +11,7 @@
     const form = document.getElementById('searchForm');
     const searchInput = document.getElementById('searchInput');
     const results = document.getElementById('results');
+    const announcer = document.getElementById('resultsAnnouncer');
     if (!form || !searchInput || !results) return;
 
     // Each filter row: pills carry data-filter="<param>" and data-value
@@ -44,7 +45,8 @@
                 const value = pill.dataset.value;
                 const active = value === selected;
                 pill.classList.toggle('active', active);
-                pill.setAttribute('aria-pressed', active ? 'true' : 'false');
+                if (active) pill.setAttribute('aria-current', 'true');
+                else pill.removeAttribute('aria-current');
                 const params = new URLSearchParams(base);
                 if (value === ALL) params.delete(name); else params.set(name, value);
                 const qs = params.toString();
@@ -69,6 +71,10 @@
             });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             results.innerHTML = await resp.text();
+            // The swapped fragment can't announce itself; a persistent live region can
+            const summary = results.querySelector('[data-results-summary]');
+            if (announcer && summary) announcer.textContent = summary.dataset.resultsSummary;
+            results.dispatchEvent(new CustomEvent('storefront:results-updated', { bubbles: true }));
             history.replaceState(null, '', qs ? '/?' + qs : '/');
             results.classList.remove('is-loading');
         } catch (err) {

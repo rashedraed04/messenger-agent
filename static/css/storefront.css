@@ -4,7 +4,11 @@
    depth comes from solid surfaces, 1px gold borders and small shadows. */
 
 :root {
+    color-scheme: dark;
     --bg-body: #0a0a0d;
+    --bg-header: #0d0d10;
+    --bg-deep: #060608;
+    --ink-on-gold: #1a1408;
     --bg-card: #141317;
     --bg-panel: #0f0f13;
     --bg-elevated: #18171b;
@@ -23,9 +27,12 @@
     --amber-fill: linear-gradient(135deg, #2a1d06 0%, #3d2a08 50%, #241804 100%);
     --text-primary: #f7f3e8;
     --text-secondary: #a69f8e;
-    --text-muted: #7a7466;
+    /* Quietest legible text: 5.2:1 on cards, still AA at tag size */
+    --text-muted: #8f8775;
     --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.35);
     --font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 body {
@@ -33,15 +40,36 @@ body {
     background-color: var(--bg-body);
     color: var(--text-primary);
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
+    /* viewport-fit=cover: keep content clear of the notch in landscape */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+html {
+    scrollbar-color: rgba(212, 175, 55, 0.3) var(--bg-body);
 }
 
 ::selection {
     background: rgba(212, 175, 55, 0.35);
     color: #fff;
+}
+
+.hero-title,
+.detail-title,
+.related-title,
+.perfume-title-ar {
+    text-wrap: balance;
+}
+
+.hero-subtitle,
+.detail-desc,
+.perfume-desc {
+    text-wrap: pretty;
 }
 
 .text-gold { color: var(--gold) !important; }
@@ -58,7 +86,7 @@ input:focus-visible {
 /* Bootstrap's primary button would be blue — keep it gold */
 .btn-primary {
     background: var(--gold-gradient);
-    color: #1a1408;
+    color: var(--ink-on-gold);
     border: none;
     font-weight: 600;
     border-radius: 10px;
@@ -67,18 +95,38 @@ input:focus-visible {
 .btn-primary:hover,
 .btn-primary:focus-visible {
     background: linear-gradient(135deg, #ffd700 0%, #e8c766 45%, #f5a524 100%);
-    color: #1a1408;
+    color: var(--ink-on-gold);
 }
 
 /* Navbar — solid surface, gold hairline underneath */
 .store-navbar {
-    background-color: #0d0d10;
+    background-color: var(--bg-header);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 1020;
     padding: 0.7rem 0;
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* Shade under the header, faded in by scroll once content slides beneath it */
+.store-navbar::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: 14px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+    opacity: 0;
+    pointer-events: none;
+}
+
+@supports (animation-timeline: scroll()) {
+    .store-navbar::after {
+        animation: fade-in linear both;
+        animation-timeline: scroll(root);
+        animation-range: 0 96px;
+    }
 }
 
 .navbar-brand-text {
@@ -128,9 +176,26 @@ input:focus-visible {
     text-overflow: ellipsis;
 }
 
+.brand-location {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .brand-location i {
     color: var(--gold-accent);
+    flex-shrink: 0;
 }
+
+.loc-viewport {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The second copy only exists to make the phone ticker loop seamlessly */
+.loc-text + .loc-text { display: none; }
 
 .brand-badge {
     align-items: center;
@@ -206,6 +271,29 @@ input:focus-visible {
         var(--bg-body);
 }
 
+/* Flux lines (flux-lines.js, WebGL): the page background below the hero.
+   A fixed layer behind everything; the solid hero, header, cards, controls
+   and footer cover it, so the lines show in the margins and between cards.
+   The shader fades the lines in itself. */
+.page-flux {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    display: block;
+    width: 100%;
+    /* Largest viewport height: the phone URL bar showing or hiding never
+       resizes (and reallocates) the canvas mid-scroll */
+    height: 100vh;
+    height: 100lvh;
+    pointer-events: none;
+}
+
+.hero-inner {
+    position: relative;
+    z-index: 1;
+}
+
 .hero-pill {
     display: inline-flex;
     align-items: center;
@@ -228,15 +316,43 @@ input:focus-visible {
     margin-bottom: 1rem;
 }
 
-.hero-gold {
-    background: linear-gradient(135deg, #fbe7a1 0%, #d4af37 40%, #aa7c11 100%);
+/* The one gradient text: a gold current flowing through the whole headline,
+   right to left (reading direction), like light moving over metal. The
+   gradient repeats every 200% (two highlights per period, so a highlight is
+   always on screen) and loops seamlessly. inline-block sizes the gradient to
+   the words rather than the full container width. */
+.hero-title-text {
+    display: inline-block;
+    color: var(--gold);
+    background: linear-gradient(100deg,
+        #aa7c11 0%,
+        #d4af37 12%,
+        #fff1c9 25%,
+        #d4af37 38%,
+        #aa7c11 50%,
+        #d4af37 62%,
+        #fbe7a1 75%,
+        #d4af37 88%,
+        #aa7c11 100%);
+    background-size: 200% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.hero-white {
-    color: #fff;
+@media (prefers-reduced-motion: no-preference) {
+    .hero-title-text {
+        animation: title-flow 8s linear infinite;
+    }
+
+    /* flux-lines.js pauses it with the lines when the hero is off screen */
+    .hero-section.is-paused .hero-title-text {
+        animation-play-state: paused;
+    }
+}
+
+@keyframes title-flow {
+    to { background-position: 200% 0; }
 }
 
 .hero-subtitle {
@@ -295,6 +411,7 @@ input:focus-visible {
     transition: border-color 0.15s ease, background-color 0.15s ease;
     -webkit-appearance: none;
     appearance: none;
+    caret-color: var(--gold);
 }
 
 .search-input::-webkit-search-cancel-button { display: none; }
@@ -389,9 +506,17 @@ input:focus-visible {
     border-color: var(--gold);
 }
 
+.type-pill,
+.cat-pill,
+.btn-messenger,
+.btn-nav-gold {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 .cat-pill.active {
     background: var(--gold-gradient);
-    color: #1a1408;
+    color: var(--ink-on-gold);
     border-color: transparent;
     font-weight: 700;
 }
@@ -419,6 +544,7 @@ input:focus-visible {
 .stock-count {
     color: var(--gold-bright);
     font-size: 1rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .hover-gold:hover { color: var(--gold) !important; }
@@ -446,10 +572,18 @@ input:focus-visible {
     left: 12%;
     height: 1px;
     background: var(--gold-hairline);
+    /* The crown line: draws in on reveal, stretches across on hover */
+    transition: transform 400ms var(--ease-out);
 }
 
 .perfume-card:hover {
     border-color: var(--border-hover);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .perfume-card:hover::before {
+        transform: scaleX(1.25);
+    }
 }
 
 .card-head {
@@ -548,7 +682,11 @@ input:focus-visible {
     z-index: 1;
 }
 
-.detail-visual .category-tag { right: 1rem; }
+.detail-visual .category-tag {
+    right: 1rem;
+    /* Product photos are often white: give the tag its own dark ground */
+    background: rgba(10, 10, 13, 0.85);
+}
 .detail-visual .brand-tag { left: 1rem; }
 
 .card-body-content {
@@ -643,7 +781,7 @@ a.tag-badge:hover {
 
 /* Footer */
 .store-footer {
-    background-color: #060608;
+    background-color: var(--bg-deep);
     border-top: 1px solid var(--border-color);
     padding: 2.75rem 0 1.5rem;
     margin-top: 3rem;
@@ -837,6 +975,260 @@ a.footer-chip:hover {
     color: var(--gold-soft);
 }
 
+/* Motion — transform and opacity only, all behind no-preference so
+   reduced-motion users get the static site. Scroll-reveal classes are added
+   by motion.js, so content stays visible if scripts fail. */
+.hero-section {
+    position: relative;
+}
+
+.hero-section::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    inset-inline: 20%;
+    height: 1px;
+    background: var(--gold-hairline);
+}
+
+/* The header stays put while pages cross-fade beneath it */
+.store-navbar {
+    view-transition-name: site-header;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    /* Product image carries over from card to detail page (same-origin navigations) */
+    @view-transition {
+        navigation: auto;
+    }
+
+    ::view-transition-group(*) {
+        animation-duration: 380ms;
+        animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1);
+    }
+
+    /* Card well and detail image differ in aspect ratio — crop, don't stretch */
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Hero arrival: short rise, then the gold hairline draws out from the center */
+    .hero-pill,
+    .hero-title,
+    .hero-subtitle,
+    .trust-badges {
+        animation: hero-rise 520ms var(--ease-out) both;
+    }
+
+    .hero-title { animation-delay: 60ms; }
+    .hero-subtitle { animation-delay: 120ms; }
+    .trust-badges { animation-delay: 180ms; }
+
+    .hero-section::after {
+        animation: hairline-draw 700ms var(--ease-in-out) 200ms both;
+    }
+
+    /* Press feedback */
+    .btn-messenger,
+    .btn-primary,
+    .btn-nav-gold,
+    .btn-nav-ghost,
+    .type-pill,
+    .cat-pill,
+    .footer-chip {
+        transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, transform 160ms var(--ease-out);
+    }
+
+    .btn-messenger:active,
+    .btn-primary:active,
+    .btn-nav-gold:active,
+    .btn-nav-ghost:active,
+    .type-pill:active,
+    .cat-pill:active,
+    .footer-chip:active {
+        transform: scale(0.97);
+    }
+
+    /* Scroll reveal for grid cards that start below the fold: the card rises,
+       then its gold crown line draws out from the center */
+    .reveal-pending {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    .reveal-in {
+        transition:
+            opacity 450ms var(--ease-out) var(--reveal-delay, 0ms),
+            transform 450ms var(--ease-out) var(--reveal-delay, 0ms);
+    }
+
+    .reveal-in .perfume-card::before {
+        animation: hairline-draw 600ms var(--ease-in-out) calc(var(--reveal-delay, 0ms) + 150ms) backwards;
+    }
+
+    /* Live-search results already on screen settle in instead of snapping */
+    .swap-in {
+        animation: swap-in 240ms var(--ease-out) var(--reveal-delay, 0ms) backwards;
+    }
+
+    /* Grid photos fade in once decoded (motion.js adds .photo-pending) */
+    .product-photo {
+        transition: opacity 300ms var(--ease-out);
+    }
+
+    .product-photo.photo-pending {
+        opacity: 0;
+    }
+
+    /* Product page: details arrive in reading order alongside the image */
+    .detail-info > * {
+        animation: hero-rise 460ms var(--ease-out) backwards;
+    }
+
+    .detail-info > :nth-child(2) { animation-delay: 40ms; }
+    .detail-info > :nth-child(3) { animation-delay: 80ms; }
+    .detail-info > :nth-child(4) { animation-delay: 120ms; }
+    .detail-info > :nth-child(5) { animation-delay: 160ms; }
+    .detail-info > :nth-child(6) { animation-delay: 200ms; }
+    .detail-info > :nth-child(n+7) { animation-delay: 240ms; }
+}
+
+/* Scroll-linked: the hero steps back as the catalog scrolls up over it.
+   Scale and fade only (no parallax offset); browsers without scroll
+   timelines keep the hero still. */
+@supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .hero-inner {
+            animation: hero-recede linear both;
+            animation-timeline: view();
+            animation-range: exit 0% exit 90%;
+        }
+    }
+}
+
+/* Photo zoom only with a real pointer, so taps never leave a stuck state */
+/* Card hover: the card rises toward the visitor (a small scale-up with a
+   deeper shadow) while its photo zooms a little further inside the well.
+   Real pointers only, so taps never leave a card stuck enlarged; the scroll
+   reveal moves the grid column, never the card, so the two don't fight. */
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+    .perfume-card {
+        transition: border-color 0.2s ease, transform 320ms var(--ease-out), box-shadow 320ms var(--ease-out);
+    }
+
+    .perfume-card:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .product-photo {
+        transition: opacity 300ms var(--ease-out), transform 500ms var(--ease-out);
+    }
+
+    .perfume-card:hover .product-photo {
+        transform: scale(1.06);
+    }
+}
+
+@keyframes loc-ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(50%); }
+}
+
+@keyframes hero-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+
+@keyframes hairline-draw {
+    from { transform: scaleX(0); }
+}
+
+@keyframes swap-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+
+@keyframes hero-recede {
+    to {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Sticky order bar on product pages (phones and tablets only) */
+.sticky-cta {
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    .sticky-cta {
+        display: block;
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 1030;
+        background: var(--bg-header);
+        border-top: 1px solid var(--border-gold);
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+        padding: 0.6rem env(safe-area-inset-right) calc(0.6rem + env(safe-area-inset-bottom)) env(safe-area-inset-left);
+        transform: translateY(100%);
+        visibility: hidden;
+        /* Leaves faster than it arrives */
+        transition: transform 200ms var(--ease-out), visibility 0s linear 200ms;
+    }
+
+    .sticky-cta.is-visible {
+        transform: none;
+        visibility: visible;
+        transition: transform 280ms var(--ease-out), visibility 0s;
+    }
+
+    .sticky-cta-name {
+        flex: 1;
+        min-width: 0;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sticky-cta .btn-messenger {
+        flex-shrink: 0;
+        padding-inline: 1.1rem;
+    }
+
+    body.has-sticky-cta {
+        padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+    }
+}
+
+@media (max-width: 991.98px) and (prefers-reduced-motion: reduce) {
+    .sticky-cta {
+        transform: none;
+        opacity: 0;
+        transition: opacity 150ms ease, visibility 0s linear 150ms;
+    }
+
+    .sticky-cta.is-visible {
+        opacity: 1;
+        transition: opacity 150ms ease, visibility 0s;
+    }
+}
+
 /* --- Phones --- */
 @media (max-width: 768px) {
     .store-navbar { padding: 0.55rem 0; }
@@ -848,7 +1240,22 @@ a.footer-chip:hover {
     }
 
     .brand-name { font-size: 1.1rem; }
-    .brand-tagline { font-size: 0.68rem; max-width: 42vw; }
+    .brand-tagline { font-size: 0.72rem; max-width: 42vw; }
+
+    /* Location scrolls like a news ticker; RTL, so it drifts rightward */
+    @media (prefers-reduced-motion: no-preference) {
+        .loc-viewport {
+            text-overflow: clip;
+            -webkit-mask-image: linear-gradient(to left, transparent, #000 10%, #000 90%, transparent);
+            mask-image: linear-gradient(to left, transparent, #000 10%, #000 90%, transparent);
+        }
+        .loc-track {
+            display: inline-flex;
+            animation: loc-ticker 14s linear infinite;
+        }
+        .loc-text { padding-inline-end: 2.5rem; }
+        .loc-text + .loc-text { display: inline; }
+    }
 
     /* Messenger button collapses to an icon */
     .btn-nav-gold { width: 42px; padding: 0; }
@@ -895,6 +1302,56 @@ a.footer-chip:hover {
         scroll-snap-align: start;
     }
 
+    /* A sideways swipe on the pills must not trigger browser back/forward */
+    .type-pills,
+    .category-pills {
+        overscroll-behavior-x: contain;
+        scroll-timeline: --pill-scroll inline;
+        /* Snap to the padded edge so the row rests at scroll 0, not a few px in */
+        scroll-padding-inline: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
+    }
+
+    /* Edge fades say "more this way". The end fade shows by default; with
+       scroll timelines each fade tracks how far the row has been swiped. */
+    .filter-row {
+        position: relative;
+        timeline-scope: --pill-scroll;
+    }
+
+    .filter-row::before,
+    .filter-row::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 2px;
+        width: 2.25rem;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .filter-row::before {
+        inset-inline-start: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+        background: linear-gradient(to left, var(--bg-body) 15%, rgba(10, 10, 13, 0));
+        opacity: 0;
+    }
+
+    .filter-row::after {
+        inset-inline-end: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+        background: linear-gradient(to right, var(--bg-body) 15%, rgba(10, 10, 13, 0));
+    }
+
+    @supports (animation-timeline: scroll()) {
+        .filter-row::before {
+            animation: pill-edge-start linear both;
+            animation-timeline: --pill-scroll;
+        }
+
+        .filter-row::after {
+            animation: pill-edge-end linear both;
+            animation-timeline: --pill-scroll;
+        }
+    }
+
     .bottle-visual-wrapper { height: 170px; }
     .perfume-title-ar { font-size: 1.1rem; }
 
@@ -904,4 +1361,119 @@ a.footer-chip:hover {
     .detail-cta { max-width: none; }
 
     .store-footer { margin-top: 2rem; padding-top: 2rem; }
+}
+
+@keyframes pill-edge-start {
+    0% { opacity: 0; }
+    12%, 100% { opacity: 1; }
+}
+
+@keyframes pill-edge-end {
+    0%, 88% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Touch screens: every tap target reaches 44px */
+@media (pointer: coarse) {
+    .type-pill,
+    .cat-pill,
+    .footer-chip,
+    .btn-nav-gold {
+        min-height: 44px;
+    }
+
+    a.tag-badge {
+        display: inline-block;
+        padding: 0.45rem 0.7rem;
+    }
+
+    .detail-breadcrumb a {
+        display: inline-block;
+        padding-block: 0.7rem;
+        margin-block: -0.7rem;
+    }
+}
+
+@media (pointer: coarse) and (max-width: 768px) {
+    .btn-nav-gold { width: 44px; }
+}
+
+/* Hero palms (palms.js): gold line-art date palms framing the hero title,
+   crowns near the screen edges, trunks running out through the hero's bottom.
+   palms.js sizes them to the hero (--palm-scale, --palm-bottom, --palm-inset);
+   scroll sets --sway (fronds lift) and --sway2 (crowns lean). */
+.hero-palms {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.palm {
+    position: absolute;
+    bottom: var(--palm-bottom, 0);
+    width: 420px;
+    height: 900px;
+    transform-origin: bottom left;
+    transform: scale(var(--palm-scale, 0.5));
+}
+
+.palm-left {
+    left: var(--palm-inset, 0);
+}
+
+.palm-right {
+    right: var(--palm-inset, 0);
+    transform-origin: bottom right;
+}
+
+/* Phones: the title spans the full width, so the palms step back behind it */
+@media (max-width: 768px) {
+    .hero-palms {
+        opacity: 0.38;
+    }
+}
+
+.palm-art {
+    position: absolute;
+    inset: 0;
+}
+
+/* Mirrored artwork; mirroring flips rotations too, so the wind still lifts */
+.palm-right .palm-art {
+    transform: scaleX(-1);
+}
+
+.palm-trunk {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.palm-crown {
+    position: absolute;
+    transform: rotate(calc(var(--sway2, 0) * 0.25deg));
+    transform-origin: 0 0;
+    will-change: transform;
+}
+
+.palm-dates {
+    position: absolute;
+    left: -24px;
+    top: 4px;
+}
+
+.frond {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+}
+
+.frond-sway {
+    position: absolute;
+    left: 0;
+    will-change: transform;
+    transform: rotate(calc((var(--sway, 0) * var(--k) + var(--sway2, 0) * var(--k2)) * 1deg));
 }

@@ -3,14 +3,18 @@
 
 {% block content %}
     <!-- Hero Section -->
+    <canvas class="page-flux" aria-hidden="true"></canvas>
+
+    <!-- Hero: palms.js adds the palms behind the title -->
     <section class="hero-section">
-        <div class="container">
+        <div class="container hero-inner">
             {% if brand.sf_hero_pill %}
             <div class="hero-pill">
                 {{ palm_drop(16) }} <span>{{ brand.sf_hero_pill }}</span> {{ palm_drop(16) }}
             </div>
             {% endif %}
-            <h1 class="hero-title"><span class="hero-gold">{{ brand.sf_hero_title_gold }}</span>{% if brand.sf_hero_title_white %} <span class="hero-white">{{ brand.sf_hero_title_white }}</span>{% endif %}</h1>
+            {# One gradient runs through the whole title, so both brand parts share it #}
+            <h1 class="hero-title"><span class="hero-title-text">{{ brand.sf_hero_title_gold }}{% if brand.sf_hero_title_white %} {{ brand.sf_hero_title_white }}{% endif %}</span></h1>
             {% if brand.sf_hero_subtitle %}
             <p class="hero-subtitle">{{ brand.sf_hero_subtitle }}</p>
             {% endif %}
@@ -56,12 +60,12 @@
         <nav class="filter-row" aria-label="نوع المنتج">
             <div class="type-pills" data-filter-group="type">
                 <a href="/?{{ q_prefix }}" data-value="الكل"
-                   class="type-pill {% if not selected_type %}active{% endif %}">
+                   class="type-pill {% if not selected_type %}active{% endif %}"{% if not selected_type %} aria-current="true"{% endif %}>
                     <i class="bi bi-grid-fill" aria-hidden="true"></i> كل المنتجات
                 </a>
                 {% for t in type_filters %}
                 <a href="/?{{ q_prefix }}type={{ t.name | urlencode }}" data-value="{{ t.name }}"
-                   class="type-pill {% if selected_type == t.name %}active{% endif %}">
+                   class="type-pill {% if selected_type == t.name %}active{% endif %}"{% if selected_type == t.name %} aria-current="true"{% endif %}>
                     <i class="bi {{ t.icon }}" aria-hidden="true"></i> {{ t.name }}
                 </a>
                 {% endfor %}
@@ -73,18 +77,19 @@
         <nav class="filter-row mb-4" aria-label="الفئة">
             <div class="category-pills" id="categoryPills" data-filter-group="category">
                 <a href="/?{{ q_prefix }}category={{ 'الكل' | urlencode }}" data-value="الكل"
-                   class="cat-pill {% if selected_category == 'الكل' or not selected_category %}active{% endif %}">
+                   class="cat-pill {% if selected_category == 'الكل' or not selected_category %}active{% endif %}"{% if selected_category == 'الكل' or not selected_category %} aria-current="true"{% endif %}>
                     الكل
                 </a>
                 {% for cat in categories %}
                 <a href="/?{{ q_prefix }}category={{ cat | urlencode }}" data-value="{{ cat }}"
-                   class="cat-pill {% if selected_category == cat %}active{% endif %}">
+                   class="cat-pill {% if selected_category == cat %}active{% endif %}"{% if selected_category == cat %} aria-current="true"{% endif %}>
                     {{ cat }}
                 </a>
                 {% endfor %}
             </div>
         </nav>
 
+        <div id="resultsAnnouncer" class="visually-hidden" role="status" aria-live="polite"></div>
         <div id="results">
             {% include "storefront/_results.html" %}
         </div>
@@ -93,4 +98,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', path='js/storefront.js') }}"></script>
+<script src="{{ url_for('static', path='js/flux-lines.js') }}" defer></script>
 {% endblock %}

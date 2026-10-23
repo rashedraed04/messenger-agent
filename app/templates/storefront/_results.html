@@ -1,8 +1,9 @@
 {# Catalog results (status bar + grid). Rendered on the page and by /partials/products for live search. #}
 <!-- Result Status Bar -->
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 small" role="status" aria-live="polite">
+{# Live search announces the count through #resultsAnnouncer (outside this swapped fragment) #}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 small" data-results-summary="{% if products %}{{ total_count }} منتج{% else %}لا توجد منتجات مطابقة{% endif %}">
     <div class="stock-chip">
-        <span class="stock-dot"></span>
+        <span class="stock-dot" aria-hidden="true"></span>
         <span>المنتجات المتوفرة: </span>
         <strong class="stock-count">{{ total_count }}</strong> منتج
         {% if search_query %}
@@ -24,7 +25,7 @@
 
 <!-- Products Grid -->
 {% if products %}
-<div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4">
+<div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4" data-reveal>
     {% for p in products %}
     <div class="col">
         {% include "storefront/_card.html" %}
@@ -35,7 +36,7 @@
 <!-- Empty State -->
 <div class="empty-state text-center p-5 my-5">
     <div class="fs-1 mb-3 text-gold"><i class="bi bi-search" aria-hidden="true"></i></div>
-    <h4 class="text-light mb-2">عذراً، لم نجد منتجات مطابقة لبحثك</h4>
+    <h2 class="h4 text-light mb-2">عذراً، لم نجد منتجات مطابقة لبحثك</h2>
     <p class="text-secondary mb-4">جرب البحث بكلمات أخرى أو تصفح باقي الفئات المتاحة.</p>
     <div>
         <a href="/" class="btn btn-primary px-4" data-reset-filters>عرض كافة المنتجات المتوفرة</a>

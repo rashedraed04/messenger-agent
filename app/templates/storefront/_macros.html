@@ -94,9 +94,14 @@
 {%- endmacro %}
 
 {# Product image if the admin set one, otherwise the illustration of its type #}
-{% macro product_visual(p, width=68) -%}
+{# eager=True for the main image of a page (its largest paint), lazy everywhere else #}
+{% macro product_visual(p, width=68, eager=False) -%}
 {%- if p.image_url -%}
+{%- if eager -%}
+<img src="{{ p.image_url }}" alt="{{ p.name_ar }}" class="product-photo" fetchpriority="high" decoding="async">
+{%- else -%}
 <img src="{{ p.image_url }}" alt="{{ p.name_ar }}" class="product-photo" loading="lazy" decoding="async">
+{%- endif -%}
 {%- else -%}
 {%- set kind = p.visual or ('bottle' if p.size_ml else 'gift') -%}
 {%- if kind == 'bottle' -%}{{ bottle_svg(p.brand, width) }}
