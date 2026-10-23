@@ -3,7 +3,9 @@ Unit tests for price calculator.
 """
 
 from decimal import Decimal
+
 import pytest
+
 from app.services.price_calculator import (
     calculate_order_totals,
     format_dinar,

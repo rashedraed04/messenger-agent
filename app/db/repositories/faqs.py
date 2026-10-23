@@ -3,6 +3,7 @@ FAQ repository for database operations on faqs table.
 """
 
 from typing import Any
+
 from supabase import Client
 
 from app.models.faq import FAQCreate, FAQUpdate

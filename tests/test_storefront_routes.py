@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 from starlette.testclient import TestClient
+
 from app.dependencies import get_db
 from app.main import app
 

@@ -6,7 +6,18 @@ import math
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
 from fastapi.responses import HTMLResponse, RedirectResponse
 from supabase import Client
 

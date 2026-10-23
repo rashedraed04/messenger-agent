@@ -6,6 +6,7 @@ product form asks for and which illustration the storefront draws.
 
 import logging
 from typing import Any
+
 from supabase import Client
 
 logger = logging.getLogger(__name__)

@@ -3,6 +3,7 @@ Unit tests for Jordanian phone normalizer.
 """
 
 import pytest
+
 from app.services.phone_normalizer import (
     PhoneValidationError,
     is_valid_jordanian_phone,

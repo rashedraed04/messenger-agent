@@ -2,8 +2,9 @@
 Conversation and Message repository for database operations on conversations and messages.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
+
 from supabase import Client
 
 from app.models.conversation import ConversationState
@@ -46,7 +47,7 @@ class ConversationRepository:
             return conv
 
         # Create new
-        now_iso = datetime.now(timezone.utc).isoformat()
+        now_iso = datetime.now(UTC).isoformat()
         payload = {
             "store_id": store_id,
             "messenger_psid": messenger_psid,
@@ -85,7 +86,7 @@ class ConversationRepository:
         state_val = state.value if isinstance(state, ConversationState) else state
         payload: dict[str, Any] = {
             "state": state_val,
-            "last_message_at": datetime.now(timezone.utc).isoformat(),
+            "last_message_at": datetime.now(UTC).isoformat(),
         }
         if collected_slots is not None:
             payload["collected_slots"] = collected_slots
@@ -115,7 +116,7 @@ class ConversationRepository:
             "state": ConversationState.HUMAN_HANDOFF.value
             if is_handoff
             else ConversationState.DISCOVERY.value,
-            "last_message_at": datetime.now(timezone.utc).isoformat(),
+            "last_message_at": datetime.now(UTC).isoformat(),
         }
         res = (
             self.client.table(self.conversations_table)
@@ -141,7 +142,7 @@ class ConversationRepository:
             "content": content,
             "message_type": message_type,
             "ai_metadata": ai_metadata,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         }
         res = self.client.table(self.messages_table).insert(payload).execute()
         return res.data[0] if res.data else {}

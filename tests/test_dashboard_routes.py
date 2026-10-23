@@ -3,7 +3,9 @@ Integration and route tests for dashboard authentication and pages.
 """
 
 from unittest.mock import MagicMock
+
 import pytest
+
 from app.dashboard.middleware import get_current_user_optional, require_auth
 from app.dependencies import get_db
 from app.main import app

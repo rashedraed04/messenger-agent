@@ -2,15 +2,15 @@
 Tests for customer photos (product recognition) and angry-customer Telegram alerts.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from app.ai.provider_interface import AIResponse, ImageInput
 from app.ai.response_parser import parse_ai_response
-from app.messenger.webhook_handler import WebhookHandler, extract_image_urls
 from app.messenger.message_types import IncomingMessage
+from app.messenger.webhook_handler import WebhookHandler, extract_image_urls
 from app.models.conversation import ConversationState
 from app.services.conversation_service import (
     CUSTOMER_PHOTO_LABEL,
@@ -18,7 +18,7 @@ from app.services.conversation_service import (
     PHOTO_ONLY_PROMPT,
     ConversationService,
 )
-from app.services.images import _url_allowed, MESSENGER_IMAGE_HOSTS
+from app.services.images import MESSENGER_IMAGE_HOSTS, _url_allowed
 from tests.test_order_modification_and_memory import (  # noqa: F401 (fixtures)
     STORE_ID,
     FakeAI,
@@ -49,7 +49,7 @@ def _service(repos, order_service, response: AIResponse, notifier=None, catalog_
 @pytest.fixture
 def fresh(repos):
     repos["conv"].get_or_create.return_value = _conversation(
-        ConversationState.DISCOVERY, {}, datetime.now(timezone.utc)
+        ConversationState.DISCOVERY, {}, datetime.now(UTC)
     )
     return repos
 
@@ -234,7 +234,7 @@ async def test_simulator_alert_is_marked_as_test(fresh, order_service):
 # Handoff resumes after the memory window
 # ---------------------------------------------------------------------------
 async def test_handoff_resumes_after_12_quiet_hours(repos, order_service):
-    conv = _conversation(ConversationState.HUMAN_HANDOFF, {}, datetime.now(timezone.utc) - timedelta(hours=13))
+    conv = _conversation(ConversationState.HUMAN_HANDOFF, {}, datetime.now(UTC) - timedelta(hours=13))
     conv["is_human_handoff"] = True
     repos["conv"].get_or_create.return_value = conv
     service, ai = _service(repos, order_service, AIResponse(response_text="هلا والله، كيف بقدر أساعدك؟"))
@@ -248,7 +248,7 @@ async def test_handoff_resumes_after_12_quiet_hours(repos, order_service):
 
 
 async def test_recent_handoff_keeps_bot_silent(repos, order_service):
-    conv = _conversation(ConversationState.HUMAN_HANDOFF, {}, datetime.now(timezone.utc) - timedelta(hours=2))
+    conv = _conversation(ConversationState.HUMAN_HANDOFF, {}, datetime.now(UTC) - timedelta(hours=2))
     conv["is_human_handoff"] = True
     repos["conv"].get_or_create.return_value = conv
     service, ai = _service(repos, order_service, AIResponse(response_text="لازم ما ينبعت"))

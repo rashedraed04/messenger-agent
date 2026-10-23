@@ -6,7 +6,8 @@ import asyncio
 import hashlib
 import hmac
 import logging
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from app.ai.provider_interface import ImageInput
 from app.dashboard.rate_limit import webhook_sender_limiter

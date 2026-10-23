@@ -5,6 +5,7 @@ Dashboard product types management routes.
 import logging
 from typing import Any
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from supabase import Client

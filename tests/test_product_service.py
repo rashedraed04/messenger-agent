@@ -3,6 +3,7 @@ Unit tests for ProductService fuzzy Arabic matching and stock checks.
 """
 
 from unittest.mock import MagicMock
+
 from app.services.product_service import ProductService, normalize_arabic_text
 
 

@@ -3,6 +3,7 @@ Store repository for database operations on stores table.
 """
 
 from typing import Any
+
 from supabase import Client
 
 

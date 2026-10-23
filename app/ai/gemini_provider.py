@@ -134,7 +134,7 @@ class GeminiProvider(AIProvider):
                 )
                 return parsed
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning("Gemini model %s timed out after %.1fs. Trying next fallback...", current_model, per_model_timeout)
                 last_error = "timeout"
                 continue

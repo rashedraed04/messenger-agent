@@ -11,6 +11,7 @@ Verifies:
 import os
 import re
 from unittest.mock import MagicMock
+
 import pytest
 from starlette.testclient import TestClient
 
@@ -36,9 +37,9 @@ def test_schema_migration_files_exist():
     assert os.path.exists(m1_path), "001_initial_schema.sql missing"
     assert os.path.exists(m2_path), "002_seed_data.sql missing"
 
-    with open(m1_path, "r", encoding="utf-8") as f:
+    with open(m1_path, encoding="utf-8") as f:
         m1_content = f.read()
-    with open(m2_path, "r", encoding="utf-8") as f:
+    with open(m2_path, encoding="utf-8") as f:
         m2_content = f.read()
 
     assert len(m1_content) > 1000
@@ -48,7 +49,7 @@ def test_schema_migration_files_exist():
 def test_schema_defines_all_required_tables():
     """Verify all 13 core tables are defined with CREATE TABLE IF NOT EXISTS."""
     m1_path = os.path.join("migrations", "001_initial_schema.sql")
-    with open(m1_path, "r", encoding="utf-8") as f:
+    with open(m1_path, encoding="utf-8") as f:
         sql = f.read()
 
     expected_tables = [
@@ -76,7 +77,7 @@ def test_schema_defines_all_required_tables():
 def test_schema_enables_rls_on_all_tables():
     """Verify that every single table has ALTER TABLE ... ENABLE ROW LEVEL SECURITY."""
     m1_path = os.path.join("migrations", "001_initial_schema.sql")
-    with open(m1_path, "r", encoding="utf-8") as f:
+    with open(m1_path, encoding="utf-8") as f:
         sql = f.read()
 
     expected_tables = [
@@ -108,7 +109,7 @@ def test_strict_rls_policies_no_anon_access_on_products_and_delivery_zones():
     All public queries must go server-side through FastAPI backend.
     """
     m1_path = os.path.join("migrations", "001_initial_schema.sql")
-    with open(m1_path, "r", encoding="utf-8") as f:
+    with open(m1_path, encoding="utf-8") as f:
         sql = f.read()
 
     # Find all policies for products and delivery_zones
@@ -136,7 +137,7 @@ def test_strict_rls_policies_no_anon_access_on_products_and_delivery_zones():
 def test_rls_is_store_member_helper_exists():
     """Verify that is_store_member helper function is created with SECURITY DEFINER."""
     m1_path = os.path.join("migrations", "001_initial_schema.sql")
-    with open(m1_path, "r", encoding="utf-8") as f:
+    with open(m1_path, encoding="utf-8") as f:
         sql = f.read()
 
     assert "is_store_member" in sql

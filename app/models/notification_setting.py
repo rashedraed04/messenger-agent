@@ -5,6 +5,7 @@ Manages daily report schedules, Telegram chat targets, and alert toggles.
 
 from datetime import datetime
 from typing import Literal
+
 from pydantic import BaseModel
 
 

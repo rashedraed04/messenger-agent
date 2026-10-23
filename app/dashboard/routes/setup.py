@@ -3,6 +3,7 @@ Dashboard guided setup checklist route.
 """
 
 from typing import Any
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from supabase import Client

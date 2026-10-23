@@ -3,6 +3,7 @@ FAQ Pydantic v2 models.
 """
 
 from datetime import datetime
+
 from pydantic import BaseModel
 
 

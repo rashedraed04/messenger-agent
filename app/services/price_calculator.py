@@ -6,8 +6,9 @@ All financial calculations MUST use Python's Decimal type with 3 decimal places
 AI MUST NEVER perform financial calculations.
 """
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
+
 from pydantic import BaseModel
 
 JOD_PRECISION = Decimal("0.001")

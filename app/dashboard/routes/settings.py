@@ -3,6 +3,7 @@ Dashboard store settings and bot configuration routes.
 """
 
 from typing import Any
+
 from fastapi import APIRouter, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from supabase import Client

@@ -9,6 +9,7 @@ Customers query prices or order by clicking "Order via Messenger / Inquire Price
 
 from typing import Any
 from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
 from supabase import Client

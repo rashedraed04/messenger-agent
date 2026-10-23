@@ -4,6 +4,7 @@ Product service with Arabic fuzzy matching and catalog helpers.
 
 import re
 from typing import Any
+
 from app.db.repositories.products import ProductRepository
 
 

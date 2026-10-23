@@ -7,6 +7,7 @@ POST /webhook — Inbound events receiver (messages, postbacks)
 
 import json
 import logging
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
 from supabase import Client
 

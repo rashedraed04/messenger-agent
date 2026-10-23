@@ -4,6 +4,7 @@ management and the human-handoff overview card.
 """
 
 from unittest.mock import MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
 

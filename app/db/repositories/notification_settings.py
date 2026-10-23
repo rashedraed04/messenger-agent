@@ -4,6 +4,7 @@ Enforces multi-tenant store_id isolation.
 """
 
 from typing import Any
+
 from supabase import Client
 
 from app.models.notification_setting import (

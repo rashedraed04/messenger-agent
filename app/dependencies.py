@@ -4,9 +4,10 @@ FastAPI dependency injection providers.
 Centralises all injectable dependencies so routes stay thin.
 """
 
+from supabase import Client
+
 from app.config import Settings, get_settings
 from app.db.client import get_supabase_client
-from supabase import Client
 
 
 def get_db() -> Client:

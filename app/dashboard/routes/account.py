@@ -8,6 +8,7 @@ proves ownership of the new address (e.g. a Gmail inbox).
 
 import logging
 from typing import Any
+
 from fastapi import APIRouter, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 

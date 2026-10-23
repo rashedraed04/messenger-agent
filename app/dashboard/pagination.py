@@ -6,6 +6,7 @@ that a next page exists, so no COUNT query is needed.
 """
 
 from typing import Any
+
 from fastapi import Request
 
 PAGE_SIZE = 25

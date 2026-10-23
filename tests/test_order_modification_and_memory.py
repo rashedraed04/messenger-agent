@@ -5,7 +5,7 @@ Regression tests for:
   the prompt history held the OLDEST messages instead of the last 12 hours.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -292,7 +292,7 @@ def test_is_cancellation_request(message, extracted, intent, expected):
 
 
 async def test_turn_modify_order_returns_updated_sauvage_summary(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     repos["conv"].get_or_create.return_value = _conversation(
         ConversationState.AWAITING_CONFIRMATION, dict(TWO_PERFUME_SLOTS), now - timedelta(minutes=5)
     )
@@ -314,7 +314,7 @@ async def test_turn_modify_order_returns_updated_sauvage_summary(repos, order_se
 
 
 async def test_turn_explicit_cancel_transitions_to_cancelled(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     repos["conv"].get_or_create.return_value = _conversation(
         ConversationState.AWAITING_CONFIRMATION, dict(TWO_PERFUME_SLOTS), now - timedelta(minutes=5)
     )
@@ -347,7 +347,7 @@ def test_is_pure_greeting_false(text):
 
 
 async def test_fresh_customer_greeting_never_mentions_unasked_product(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     repos["conv"].get_or_create.return_value = _conversation(ConversationState.DISCOVERY, {}, now)
     # Simulate exactly the hallucination from production
     service, ai = _make_service(repos, order_service, AIResponse(
@@ -366,7 +366,7 @@ async def test_fresh_customer_greeting_never_mentions_unasked_product(repos, ord
 
 
 async def test_fresh_customer_good_greeting_passes_through(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     repos["conv"].get_or_create.return_value = _conversation(ConversationState.DISCOVERY, {}, now)
     natural = "هلا والله، نورتنا 🌸 شو بتدور عليه اليوم؟"
     service, _ = _make_service(repos, order_service, AIResponse(response_text=natural, intent="greeting"))
@@ -377,7 +377,7 @@ async def test_fresh_customer_good_greeting_passes_through(repos, order_service)
 
 
 async def test_returning_customer_within_12h_gets_contextual_memory(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cart = {"products": [_cart_line(SAUVAGE)]}
     repos["conv"].get_or_create.return_value = _conversation(
         ConversationState.COLLECTING_DETAILS, cart, now - timedelta(hours=3)
@@ -409,7 +409,7 @@ async def test_returning_customer_within_12h_gets_contextual_memory(repos, order
 
 
 async def test_returning_customer_after_12h_starts_fresh(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stale_cart = {"products": [_cart_line(INVICTUS)], "customer_name": "أحمد"}
     repos["conv"].get_or_create.return_value = _conversation(
         ConversationState.COLLECTING_DETAILS, stale_cart, now - timedelta(hours=13)
@@ -435,7 +435,7 @@ async def test_returning_customer_after_12h_starts_fresh(repos, order_service):
 
 
 async def test_greeting_after_cancelled_order_does_not_repeat_cancel_message(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     repos["conv"].get_or_create.return_value = _conversation(
         ConversationState.CANCELLED, {}, now - timedelta(minutes=10)
     )
@@ -462,7 +462,7 @@ def _assert_human(text: str):
 
 
 async def test_markdown_is_stripped_from_outgoing_reply(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     repos["conv"].get_or_create.return_value = _conversation(ConversationState.DISCOVERY, {}, now)
     service, _ = _make_service(repos, order_service, AIResponse(
         response_text="**اه موجود عنا سوفاج ديور!** ريحته بتجنن", intent="inquire_price",
@@ -477,7 +477,7 @@ async def test_markdown_is_stripped_from_outgoing_reply(repos, order_service):
 
 
 async def test_robotic_ai_greeting_is_replaced_with_human_one(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     repos["conv"].get_or_create.return_value = _conversation(ConversationState.DISCOVERY, {}, now)
     service, _ = _make_service(repos, order_service, AIResponse(
         response_text="يا هلا بك! نعم عطر انفكتوس متوفر", intent="greeting",
@@ -489,7 +489,7 @@ async def test_robotic_ai_greeting_is_replaced_with_human_one(repos, order_servi
 
 
 async def test_cancellation_reply_sounds_human(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     repos["conv"].get_or_create.return_value = _conversation(
         ConversationState.AWAITING_CONFIRMATION, dict(TWO_PERFUME_SLOTS), now - timedelta(minutes=5)
     )
@@ -502,7 +502,7 @@ async def test_cancellation_reply_sounds_human(repos, order_service):
 
 
 async def test_order_summary_sounds_human_and_uses_python_prices(repos, order_service):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     repos["conv"].get_or_create.return_value = _conversation(
         ConversationState.AWAITING_CONFIRMATION, dict(TWO_PERFUME_SLOTS), now - timedelta(minutes=5)
     )
@@ -548,7 +548,7 @@ def test_get_recent_messages_returns_latest_in_chronological_order():
     query.order.return_value.limit.return_value.execute.return_value.data = [
         {"content": "newest"}, {"content": "middle"}, {"content": "oldest"},
     ]
-    since = datetime(2026, 10, 19, tzinfo=timezone.utc)
+    since = datetime(2026, 10, 19, tzinfo=UTC)
 
     msgs = ConversationRepository(client).get_recent_messages("conv-1", since=since, limit=20)
 
@@ -582,7 +582,7 @@ async def test_disabled_bot_stays_silent(repos, order_service):
         "human_handoff_message": "تم تحويلك لخدمة العملاء",
     }
     repos["conv"].get_or_create.return_value = _conversation(
-        ConversationState.DISCOVERY, {}, datetime.now(timezone.utc)
+        ConversationState.DISCOVERY, {}, datetime.now(UTC)
     )
     service, ai = _make_service(repos, order_service, AIResponse(response_text="هلا"))
 

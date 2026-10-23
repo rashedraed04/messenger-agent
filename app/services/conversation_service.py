@@ -8,19 +8,21 @@ and customer interaction flow.
 import asyncio
 import logging
 import re
-from datetime import datetime, timedelta, timezone
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 from app.ai.prompt_builder import build_system_prompt
-from app.db.repositories.product_types import load_types_by_name
 from app.ai.provider_interface import AIProvider, ImageInput
 from app.db.repositories.conversations import ConversationRepository
 from app.db.repositories.customers import CustomerRepository
 from app.db.repositories.faqs import FAQRepository
+from app.db.repositories.product_types import load_types_by_name
 from app.db.repositories.products import ProductRepository
 from app.db.repositories.settings import StoreSettingRepository
 from app.models.conversation import ConversationState, MessageDirection
-from app.services.order_service import OrderService
 from app.services.images import fetch_catalog_image
+from app.services.order_service import OrderService
 from app.services.product_service import normalize_arabic_text
 from app.services.text_humanizer import humanize_reply
 from app.telegram.reporter import TelegramReporter, format_angry_customer_alert
@@ -77,7 +79,7 @@ def _parse_timestamp(value: Any) -> datetime | None:
             dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
         except ValueError:
             return None
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
 
 class ConversationService:
@@ -154,7 +156,7 @@ class ConversationService:
 
         # 2b. Session freshness: anything older than the memory window is abandoned,
         # and a finished order (confirmed/cancelled) means the next message starts fresh.
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         window_start = now - MEMORY_WINDOW
         last_activity = _parse_timestamp(conversation.get("last_message_at"))
         is_stale = last_activity is not None and last_activity < window_start

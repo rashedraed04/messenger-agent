@@ -2,7 +2,9 @@
 Dashboard overview route (recent orders and quick actions).
 """
 
+import logging
 from typing import Any
+
 from fastapi import APIRouter, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from supabase import Client
@@ -11,7 +13,6 @@ from app.config import Settings
 from app.dashboard.middleware import require_auth
 from app.db.repositories.orders import OrderRepository
 from app.db.repositories.settings import StoreSettingRepository
-import logging
 from app.dependencies import get_config, get_db
 
 logger = logging.getLogger(__name__)

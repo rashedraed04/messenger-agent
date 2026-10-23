@@ -13,7 +13,7 @@ This endpoint is called by:
 """
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
 from supabase import Client
@@ -43,7 +43,7 @@ async def health_check(db: Client = Depends(get_db)) -> dict:
         # Lightweight query — just need any round-trip to prevent auto-pause
         await asyncio.wait_for(asyncio.to_thread(_ping_db, db), DB_PING_TIMEOUT_SECONDS)
         db_status = "connected"
-    except asyncio.TimeoutError:
+    except TimeoutError:
         db_status = "error: timeout"
     except Exception as exc:
         db_status = f"error: {type(exc).__name__}"
@@ -51,5 +51,5 @@ async def health_check(db: Client = Depends(get_db)) -> dict:
     return {
         "status": "healthy" if db_status == "connected" else "degraded",
         "database": db_status,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }

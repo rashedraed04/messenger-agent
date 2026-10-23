@@ -9,6 +9,7 @@ are never hard-coded in templates.
 import logging
 import time
 from typing import Any
+
 from supabase import Client
 
 from app.db.repositories.settings import StoreSettingRepository

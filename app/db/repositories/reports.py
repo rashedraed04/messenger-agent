@@ -2,8 +2,9 @@
 Report repository for database operations on report_history table.
 """
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Any
+
 from supabase import Client
 
 
@@ -44,7 +45,7 @@ class ReportRepository:
             "sent_successfully": sent_successfully,
             "error_message": error_message,
             "is_scheduled": is_scheduled,
-            "sent_at": datetime.now(timezone.utc).isoformat(),
+            "sent_at": datetime.now(UTC).isoformat(),
         }
         res = (
             self.client.table(self.table)

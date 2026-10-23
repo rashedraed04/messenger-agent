@@ -4,6 +4,7 @@ Dashboard authentication and session middleware.
 
 import logging
 from typing import Any
+
 from fastapi import Depends, HTTPException, Request, status
 
 from app.config import Settings, get_settings

@@ -5,6 +5,7 @@ pre-migration fallback when products.product_type does not exist yet.
 """
 
 from unittest.mock import MagicMock
+
 import pytest
 
 from app.dashboard.middleware import require_auth

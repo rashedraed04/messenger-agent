@@ -7,7 +7,7 @@ These endpoints are NOT for external use.
 
 import hmac
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from supabase import Client
@@ -63,7 +63,7 @@ async def trigger_daily_report(
         logger.info("Daily report is turned off for store %s. Skipping.", store_id)
         return {
             "status": "skipped",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "store_id": store_id,
             "reason": "daily_report_disabled",
         }
@@ -91,7 +91,7 @@ async def trigger_daily_report(
         )
         return {
             "status": "success",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             **result,
         }
     except Exception as e:

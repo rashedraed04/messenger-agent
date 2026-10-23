@@ -3,6 +3,7 @@ Store settings repository for database operations on store_settings table.
 """
 
 from typing import Any
+
 from supabase import Client
 
 # Flat fee charged by the delivery company, used until the admin sets one in Settings

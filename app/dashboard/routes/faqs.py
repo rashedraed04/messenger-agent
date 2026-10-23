@@ -3,6 +3,7 @@ Dashboard FAQs management routes.
 """
 
 from typing import Any
+
 from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from supabase import Client

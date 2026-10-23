@@ -4,7 +4,9 @@ Unit tests for ReportService and Telegram formatters.
 
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock
+
 import pytest
+
 from app.db.repositories.orders import OrderRepository
 from app.services.report_service import ReportService
 from app.telegram.reporter import format_telegram_daily_report

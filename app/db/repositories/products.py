@@ -2,9 +2,10 @@
 Product repository for database operations on products table.
 """
 
-from decimal import Decimal
 import logging
+from decimal import Decimal
 from typing import Any
+
 from supabase import Client
 
 from app.db.repositories.search import build_ilike_or_filter, clean_search_term

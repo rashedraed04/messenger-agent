@@ -3,7 +3,9 @@ Unit and integration tests for Admin Talk with Agent (Customer simulation withou
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
+
 from app.dashboard.middleware import require_auth
 from app.dependencies import get_db
 from app.main import app

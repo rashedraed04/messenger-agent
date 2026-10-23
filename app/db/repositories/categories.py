@@ -4,6 +4,7 @@ Product category repository for the admin-managed category list.
 
 import logging
 from typing import Any
+
 from supabase import Client
 
 from app.db.repositories.product_types import reorder_rows

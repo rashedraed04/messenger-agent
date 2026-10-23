@@ -3,6 +3,7 @@ Daily Report History Pydantic v2 models.
 """
 
 from datetime import date, datetime
+
 from pydantic import BaseModel
 
 

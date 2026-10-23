@@ -2,10 +2,10 @@
 Customer repository for database operations on customers table.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-from supabase import Client
 
+from supabase import Client
 
 
 class CustomerRepository:
@@ -52,7 +52,7 @@ class CustomerRepository:
                 existing["name"] = name
             return existing
 
-        now_iso = datetime.now(timezone.utc).isoformat()
+        now_iso = datetime.now(UTC).isoformat()
         payload = {
             "store_id": store_id,
             "messenger_psid": messenger_psid,
@@ -69,7 +69,7 @@ class CustomerRepository:
     ) -> dict[str, Any] | None:
         """Update customer fields."""
         payload = dict(updates)
-        payload["last_contact_at"] = datetime.now(timezone.utc).isoformat()
+        payload["last_contact_at"] = datetime.now(UTC).isoformat()
 
         res = (
             self.client.table(self.table)
@@ -96,7 +96,7 @@ class CustomerRepository:
 
         updates: dict[str, Any] = {
             "total_orders": (current.get("total_orders") or 0) + 1,
-            "last_contact_at": datetime.now(timezone.utc).isoformat(),
+            "last_contact_at": datetime.now(UTC).isoformat(),
         }
         if name:
             updates["name"] = name

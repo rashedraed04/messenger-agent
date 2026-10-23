@@ -9,9 +9,10 @@ Coordinates:
 - Order placement
 """
 
-from datetime import datetime, timezone
 import re
+from datetime import UTC, datetime
 from typing import Any
+
 from app.db.repositories.conversations import ConversationRepository
 from app.db.repositories.customers import CustomerRepository
 from app.db.repositories.orders import OrderRepository
@@ -20,8 +21,8 @@ from app.db.repositories.settings import StoreSettingRepository
 from app.models.conversation import ConversationState
 from app.models.order import OrderStatus
 from app.services.governorates import match_governorate
-from app.services.phone_normalizer import normalize_jordanian_phone, PhoneValidationError
-from app.services.price_calculator import calculate_order_totals, OrderPriceSummary
+from app.services.phone_normalizer import PhoneValidationError, normalize_jordanian_phone
+from app.services.price_calculator import OrderPriceSummary, calculate_order_totals
 from app.services.product_service import ProductService, normalize_arabic_text
 
 # Customer-typed fields are fed back into the AI prompt and the courier report,
@@ -389,7 +390,7 @@ class OrderService:
             "customer_id": customer_id,
             "conversation_id": conversation_id,
             "status": OrderStatus.CONFIRMED.value,
-            "confirmed_at": datetime.now(timezone.utc).isoformat(),
+            "confirmed_at": datetime.now(UTC).isoformat(),
             "customer_name": collected_slots.get("customer_name"),
             "customer_phone": collected_slots.get("customer_phone"),
             "governorate": collected_slots.get("governorate"),

@@ -3,7 +3,9 @@ Unit tests for Order state machine and slot merging.
 """
 
 from unittest.mock import MagicMock
+
 import pytest
+
 from app.models.conversation import ConversationState
 from app.services.order_service import OrderService
 

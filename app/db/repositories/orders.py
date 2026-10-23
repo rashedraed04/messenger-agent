@@ -2,10 +2,11 @@
 Order repository for database operations on orders and order_items tables.
 """
 
-from datetime import date, datetime, time, timedelta, timezone
-from decimal import Decimal
 import secrets
+from datetime import UTC, date, datetime, time, timedelta, timezone
+from decimal import Decimal
 from typing import Any
+
 from dateutil import tz
 from supabase import Client
 
@@ -27,7 +28,7 @@ class OrderRepository:
         Generate human-friendly unique order number: ORD-YYYYMMDD-XXXX
         e.g., ORD-20261017-A1B2
         """
-        today_str = datetime.now(timezone.utc).strftime("%Y%m%d")
+        today_str = datetime.now(UTC).strftime("%Y%m%d")
         suffix = secrets.token_hex(2).upper()
         return f"ORD-{today_str}-{suffix}"
 

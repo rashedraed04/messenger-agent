@@ -9,6 +9,7 @@ new password.
 """
 
 import logging
+
 from fastapi import APIRouter, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 
