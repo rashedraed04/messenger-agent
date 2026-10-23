@@ -107,7 +107,7 @@ python -m venv .venv
 # Linux/macOS:
 source .venv/bin/activate
 
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 cp .env.example .env      # then fill in the values; every key is explained in the file
 ```
 
@@ -122,7 +122,7 @@ uvicorn app.main:app --reload --port 8080
 - API docs (development mode only): http://localhost:8080/docs
 - Health check: http://localhost:8080/health
 
-In development mode only, you can sign in to the dashboard with `admin@perfumestore.jo` / `admin123` without Supabase Auth. **This login is fully disabled in production.**
+In development mode only, you can sign in to the dashboard with `admin@example.com` / `admin123` without Supabase Auth. **This login is fully disabled in production.**
 
 ### Trying the bot without Facebook
 ```bash

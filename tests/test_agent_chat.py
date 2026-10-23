@@ -43,7 +43,7 @@ def auth_chat_client(client):
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[require_auth] = lambda: {
         "id": "test-admin-user",
-        "email": "admin@perfumestore.jo",
+        "email": "admin@example.com",
         "store_id": "00000000-0000-0000-0000-000000000001",
     }
 

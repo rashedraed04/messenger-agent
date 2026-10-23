@@ -28,7 +28,7 @@ def get_current_user_optional(
         if settings.app_env in ("development", "testing") and request.cookies.get("dev_user"):
             return {
                 "id": "dev-user-001",
-                "email": "owner@perfumestore.jo",
+                "email": "owner@example.com",
                 "store_id": settings.default_store_id,
                 "is_dev": True,
             }

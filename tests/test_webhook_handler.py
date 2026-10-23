@@ -34,6 +34,15 @@ def test_get_webhook_verification_failure(client):
     assert res.status_code == 403
 
 
+def test_get_webhook_verification_rejects_empty_token_when_unset(client, test_settings):
+    """With META_VERIFY_TOKEN unset, an empty hub.verify_token must not pass."""
+    test_settings.meta_verify_token = ""
+    res = client.get(
+        "/webhook",
+        params={"hub.mode": "subscribe", "hub.verify_token": "", "hub.challenge": "1158201444"},
+    )
+    assert res.status_code == 403
+
 def test_verify_hub_signature():
     secret = "my_app_secret_123"
     payload = b'{"object":"page","entry":[]}'

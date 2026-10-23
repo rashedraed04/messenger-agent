@@ -48,7 +48,7 @@ def _store_info(db: Client, store_id: str) -> tuple[str, str]:
 
 
 def _page_id(config: Settings) -> str:
-    return config.facebook_page_id or "perfumestore.jo"
+    return config.facebook_page_id
 
 
 def _decorate(

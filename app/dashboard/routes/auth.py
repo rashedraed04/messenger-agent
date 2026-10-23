@@ -80,8 +80,8 @@ def handle_login(
 
     # Dev/demo login bypass for testing and initial non-cloud dev runs
     if settings.app_env in ("development", "testing") and (
-        (email in ("admin@perfumestore.jo", "admin@example.com") and password in ("admin123", "admin1234"))
-        or (email == "test@perfumestore.jo" and password == "test1234")
+        (email == "admin@example.com" and password in ("admin123", "admin1234"))
+        or (email == "test@example.com" and password == "test1234")
     ):
         resp = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
         resp.set_cookie(

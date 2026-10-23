@@ -1,0 +1,7 @@
+# Runtime dependencies plus the tools for tests and linting (local dev and CI)
+-r requirements.txt
+
+pytest==8.3.5
+pytest-asyncio==0.25.3
+pytest-cov==6.1.0
+ruff==0.9.10

@@ -24,7 +24,7 @@ def test_login_page_renders_html(client):
 def test_dev_login_sets_cookie(client):
     res = client.post(
         "/auth/login",
-        data={"email": "admin@perfumestore.jo", "password": "admin123"},
+        data={"email": "admin@example.com", "password": "admin123"},
         follow_redirects=False,
     )
     assert res.status_code == 303
@@ -55,7 +55,7 @@ def auth_client(client):
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[require_auth] = lambda: {
         "id": "test-admin",
-        "email": "admin@perfumestore.jo",
+        "email": "admin@example.com",
         "store_id": "00000000-0000-0000-0000-000000000001",
     }
     yield client

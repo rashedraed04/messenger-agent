@@ -43,8 +43,8 @@ class Settings(BaseSettings):
     # --- Meta Messenger Platform ---
     meta_app_secret: str = ""
     meta_page_access_token: str = ""
-    meta_verify_token: str = "jordan_perfume_token_2026"
-    facebook_page_id: str = "perfumestore.jo"
+    meta_verify_token: str = ""
+    facebook_page_id: str = ""
 
     # --- Telegram Reports ---
     telegram_bot_token: str = ""

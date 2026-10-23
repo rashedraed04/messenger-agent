@@ -42,7 +42,12 @@ def verify_webhook(
     Handle Meta's Webhook verification GET request.
     Echoes back hub.challenge if hub.verify_token matches META_VERIFY_TOKEN.
     """
-    if hub_mode == "subscribe" and hub_verify_token == settings.meta_verify_token:
+    # An unset META_VERIFY_TOKEN must never match an empty hub.verify_token
+    if (
+        hub_mode == "subscribe"
+        and settings.meta_verify_token
+        and hub_verify_token == settings.meta_verify_token
+    ):
         logger.info("Webhook verification challenge passed successfully.")
         return Response(content=hub_challenge, media_type="text/plain")
 

@@ -35,7 +35,7 @@ def authed(client):
         mock_db, mock_query = make_mock_db(data, count)
         app.dependency_overrides[get_db] = lambda: mock_db
         app.dependency_overrides[require_auth] = lambda: {
-            "id": "test-admin", "email": "admin@perfumestore.jo", "store_id": STORE_ID,
+            "id": "test-admin", "email": "admin@example.com", "store_id": STORE_ID,
         }
         return mock_db, mock_query
 
@@ -112,7 +112,7 @@ def test_login_requires_csrf_token():
     with TestClient(app) as raw_client:
         res = raw_client.post(
             "/auth/login",
-            data={"email": "admin@perfumestore.jo", "password": "admin123"},
+            data={"email": "admin@example.com", "password": "admin123"},
             follow_redirects=False,
         )
         assert res.status_code == 403
