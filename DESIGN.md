@@ -1,5 +1,5 @@
 ---
-name: متجر التقوى — Storefront
+name: Al-Taqwa Store — Storefront
 description: Arabic RTL catalog of Hajj and Umrah gifts; customers order through Messenger, never through a cart.
 colors:
   obsidian: "#0a0a0d"
@@ -99,7 +99,7 @@ components:
     padding: "0.9rem"
 ---
 
-# Design System: متجر التقوى
+# Design System: Al-Taqwa Store
 
 Source of truth: [static/css/storefront.css](static/css/storefront.css) (public site) and [static/css/dashboard.css](static/css/dashboard.css) (admin, "Charcoal & Gold", same gold family on cooler charcoal). This file documents the **storefront**. The dashboard follows the same gold and type rules but is a working tool, so it gets feedback motion only (see Motion).
 
@@ -127,7 +127,7 @@ A single warm accent family on warm near-black: gold leads, brass and amber supp
 ### Primary
 - **Pilgrim Gold** (`gold`): borders at reduced opacity, icons, the English name line, focus rings, the brand name. Gold is the line that defines a surface, not the surface itself.
 - **Lamp Gold** (`gold-bright`): hover and active text only (active filter, hovered call to action). Never resting text.
-- **Soft Gold** (`gold-soft`): the Messenger call-to-action label, badges, secondary headings such as "منتجات مشابهة".
+- **Soft Gold** (`gold-soft`): the Messenger call-to-action label, badges, secondary headings such as "Similar products".
 
 ### Secondary
 - **Brass** (`brass`): the deep end of the gold gradient, the illustration bottle neck, category-chip borders.
@@ -146,7 +146,7 @@ A single warm accent family on warm near-black: gold leads, brass and amber supp
 ### Named Rules
 **The Gold Is a Line Rule.** Gold appears as a border, hairline, icon or text. Solid gold fills are limited to the active category chip and `.btn-primary`. If a new component wants a gold background, it is probably wrong.
 
-**The No New Hue Rule.** Success green appears only in the "متوفر" (in stock) check icon. No blues, purples or teal accents, and no neon glows.
+**The No New Hue Rule.** Success green appears only in the "In stock" check icon. No blues, purples or teal accents, and no neon glows.
 
 ## Typography
 

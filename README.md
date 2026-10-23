@@ -1,43 +1,43 @@
-# 🌹 متجر هدايا الحج والعمرة — مساعد مبيعات فيسبوك ماسنجر ولوحة التحكم
-### Hajj & Umrah Gifts Store — Facebook Messenger AI Sales Agent & RTL Dashboard
+# 🌹 Hajj & Umrah Gifts Store — Facebook Messenger AI Sales Agent & Dashboard
+### Messenger sales bot in the Jordanian dialect, public storefront, and RTL admin dashboard
 
-نظام متكامل لأتمتة مبيعات متجر بضائع وهدايا الحج والعمرة في الأردن عبر Facebook Messenger بالذكاء الاصطناعي (Gemini) وباللهجة الأردنية، مع واجهة متجر عامة (بدون أسعار)، ولوحة تحكم عربية (RTL) لإدارة المنتجات والمحادثات، وتقرير يومي على تيليجرام بطلبات اليوم لتسليمها لشركة التوصيل.
-
----
-
-## 📑 المحتويات
-1. [نظرة عامة والمخطط المعماري](#1--نظرة-عامة-والمخطط-المعماري)
-2. [التشغيل المحلي والاختبارات](#2--التشغيل-المحلي-والاختبارات)
-3. [النشر على Render.com و cron-job.org](#3--النشر-على-rendercom-و-cron-joborg)
-4. [الانتقال من صفحة فيسبوك التجريبية إلى صفحة المتجر الحقيقية](#4--الانتقال-من-صفحة-فيسبوك-التجريبية-إلى-صفحة-المتجر-الحقيقية)
-5. [مراجع: قاعدة البيانات، حساب المدير، الأمان](#5--مراجع)
+A complete system that automates sales for a Hajj and Umrah goods and gifts store in Jordan over Facebook Messenger, using AI (Gemini) that speaks the Jordanian dialect. It includes a public storefront (with no prices), an Arabic (RTL) dashboard for managing products and conversations, and a daily Telegram report of the day's orders to hand over to the delivery company.
 
 ---
 
-## 1. 🏛️ نظرة عامة والمخطط المعماري
+## 📑 Contents
+1. [Overview and architecture](#1--overview-and-architecture)
+2. [Running locally and tests](#2--running-locally-and-tests)
+3. [Deploying to Render.com and cron-job.org](#3--deploying-to-rendercom-and-cron-joborg)
+4. [Moving from the test Facebook page to the real store page](#4--moving-from-the-test-facebook-page-to-the-real-store-page)
+5. [Reference: database, admin account, security](#5--reference)
 
-### ماذا يفعل النظام؟
-- **بوت ماسنجر باللهجة الأردنية:** يقترح منتجات من الكتالوج الفعلي فقط، يتعرف على المنتج من صورة يرسلها الزبون، ويجمع بيانات الطلب (الاسم، الهاتف، المحافظة، العنوان) دفعة واحدة أو خطوة بخطوة.
-- **حساب الأسعار برمجياً بالدينار (JOD):** بدقة 3 خانات عشرية، مع رسوم توصيل ثابتة من صفحة الإعدادات. الذكاء الاصطناعي لا يحسب الأسعار أبداً.
-- **تطبيع أرقام الهواتف الأردنية:** يحوّل الأرقام الهندية (٠-٩) وصيغ +962 / 00962 إلى الصيغة 07XXXXXXXX.
-- **واجهة متجر عامة (`/`):** تعرض المنتجات **بدون أي أسعار** (لا في HTML ولا في `/api/public/products`)، وزر "اسأل عن السعر عبر ماسنجر".
-- **لوحة تحكم (`/dashboard`):** المنتجات، الفئات، الأنواع، الأسئلة الشائعة، محاكي البوت، التقارير، الإعدادات، وحساب المدير.
-- **تيليجرام:** تقرير يومي بالطلبات المؤكدة (9:00 مساءً بتوقيت عمّان) + تنبيه فوري عند زبون منزعج.
+---
 
-### المخطط
+## 1. 🏛️ Overview and architecture
+
+### What does the system do?
+- **Messenger bot in the Jordanian dialect:** suggests products from the real catalog only, recognizes a product from a photo the customer sends, and collects the order details (name, phone, governorate, address) all at once or step by step.
+- **Prices calculated in code, in Jordanian dinars (JOD):** to 3 decimal places, with a flat delivery fee set on the settings page. The AI never calculates prices.
+- **Jordanian phone number normalization:** converts Arabic-Indic digits and the +962 / 00962 formats to the 07XXXXXXXX format.
+- **Public storefront (`/`):** shows products **without any prices** (neither in the HTML nor in `/api/public/products`), with an "Ask about the price on Messenger" button.
+- **Dashboard (`/dashboard`):** products, categories, types, FAQs, bot simulator, reports, settings, and the admin account.
+- **Telegram:** a daily report of confirmed orders (9:00 PM Amman time) plus an instant alert when a customer is upset.
+
+### Architecture
 
 ```mermaid
 graph TB
-    subgraph "خارجي"
-        META["فيسبوك ماسنجر (Meta)"]
+    subgraph "External"
+        META["Facebook Messenger (Meta)"]
         GEMINI["Google Gemini API"]
-        TELEGRAM["بوت تيليجرام"]
+        TELEGRAM["Telegram bot"]
         CRON["cron-job.org"]
     end
 
     subgraph "Render.com (Frankfurt, Free)"
         WH["/webhook"]
-        SHOP["/ واجهة المتجر"]
+        SHOP["/ storefront"]
         DASH["/dashboard"]
         HEALTH["/health"]
         REPORT["/internal/daily-report"]
@@ -46,210 +46,210 @@ graph TB
     subgraph "Supabase (Free)"
         DB[("PostgreSQL")]
         AUTH["Supabase Auth"]
-        STORAGE["Storage: صور المنتجات"]
+        STORAGE["Storage: product photos"]
     end
 
-    META -->|"POST موقّع HMAC-SHA256"| WH
+    META -->|"HMAC-SHA256 signed POST"| WH
     WH --> GEMINI
-    WH -->|"الرد عبر Send API"| META
+    WH -->|"reply via Send API"| META
     WH --> DB
     SHOP --> DB
     DASH --> AUTH
     DASH --> DB
     DASH --> STORAGE
-    CRON -->|"كل 14 دقيقة"| HEALTH
-    HEALTH -->|"استعلام خفيف يُبقي القاعدة نشطة"| DB
-    CRON -->|"يومياً 21:00 عمّان + X-Internal-Token"| REPORT
+    CRON -->|"every 14 minutes"| HEALTH
+    HEALTH -->|"light query keeps the database active"| DB
+    CRON -->|"daily 21:00 Amman + X-Internal-Token"| REPORT
     REPORT --> DB
     REPORT --> TELEGRAM
 ```
 
-### التقنيات
+### Tech stack
 Python 3.11 · FastAPI · Jinja2 + Bootstrap 5 RTL · Supabase (PostgreSQL + Auth + Storage) · Google Gemini (`google-genai`) · Meta Graph API · Telegram Bot API · Render.com · cron-job.org
 
-### هيكل المشروع
+### Project structure
 ```
 Messenger_Agent/
 ├── app/
-│   ├── ai/            # مزود Gemini، بناء التعليمات، تحليل الرد
-│   ├── dashboard/     # مسارات لوحة التحكم، الجلسات، CSRF، تحديد المحاولات
-│   ├── db/            # عميل Supabase والمستودعات (Repositories)
-│   ├── messenger/     # معالج Webhook، Send API، التحقق من التوقيع
-│   ├── models/        # نماذج Pydantic
+│   ├── ai/            # Gemini provider, prompt building, response parsing
+│   ├── dashboard/     # Dashboard routes, sessions, CSRF, rate limiting
+│   ├── db/            # Supabase client and repositories
+│   ├── messenger/     # Webhook handler, Send API, signature verification
+│   ├── models/        # Pydantic models
 │   ├── routes/        # health, webhook, internal, storefront
-│   ├── services/      # منطق الأعمال (الطلبات، الأسعار، الهواتف، التقارير)
-│   ├── telegram/      # التقرير اليومي والتنبيهات
-│   ├── templates/     # قوالب Jinja2 العربية
-│   ├── config.py      # الإعدادات من متغيرات البيئة
-│   └── main.py        # إنشاء التطبيق
-├── migrations/        # ملفات SQL مرقمة (001 → 009)
-├── scripts/           # محاكي المحادثة المحلي + بيانات منتجات تجريبية
-├── static/            # CSS / JS / الشعار
-├── tests/             # اختبارات pytest
-├── render.yaml        # إعداد النشر على Render بنقرة واحدة
-├── Dockerfile         # بديل للنشر عبر Docker
-└── .env.example       # قالب متغيرات البيئة مع شرح كل مفتاح
+│   ├── services/      # Business logic (orders, prices, phones, reports)
+│   ├── telegram/      # Daily report and alerts
+│   ├── templates/     # Arabic Jinja2 templates
+│   ├── config.py      # Settings from environment variables
+│   └── main.py        # App factory
+├── migrations/        # Numbered SQL files (001 → 009)
+├── scripts/           # Local conversation simulator + demo product data
+├── static/            # CSS / JS / logo
+├── tests/             # pytest tests
+├── render.yaml        # One-click Render deployment config
+├── Dockerfile         # Alternative Docker deployment
+└── .env.example       # Environment variable template, every key explained
 ```
 
 ---
 
-## 2. 🚀 التشغيل المحلي والاختبارات
+## 2. 🚀 Running locally and tests
 
-### المتطلبات
-- Python 3.11 أو أحدث
-- مشروع Supabase (مجاني) طُبّقت عليه ملفات `migrations/` (انظر [قاعدة البيانات](#قاعدة-البيانات-supabase))
+### Requirements
+- Python 3.11 or newer
+- A (free) Supabase project with the `migrations/` files applied (see [Database](#database-supabase))
 
-### الإعداد
+### Setup
 ```bash
 python -m venv .venv
-# ويندوز:
+# Windows:
 .venv\Scripts\activate
-# لينكس/ماك:
+# Linux/macOS:
 source .venv/bin/activate
 
 pip install -r requirements.txt
-cp .env.example .env      # ثم املأ القيم؛ كل مفتاح مشروح داخل الملف
+cp .env.example .env      # then fill in the values; every key is explained in the file
 ```
 
-> اترك `APP_ENV=development` في ملف `.env` المحلي. إذا لم يُضبط هذا المتغير، يعمل التطبيق افتراضياً كـ **production** (أكثر أماناً).
+> Keep `APP_ENV=development` in your local `.env` file. If this variable is not set, the app runs as **production** by default (the safer choice).
 
-### التشغيل
+### Running
 ```bash
 uvicorn app.main:app --reload --port 8080
 ```
-- واجهة المتجر: http://localhost:8080/
-- لوحة التحكم: http://localhost:8080/dashboard
-- توثيق الـ API (في وضع التطوير فقط): http://localhost:8080/docs
-- فحص الصحة: http://localhost:8080/health
+- Storefront: http://localhost:8080/
+- Dashboard: http://localhost:8080/dashboard
+- API docs (development mode only): http://localhost:8080/docs
+- Health check: http://localhost:8080/health
 
-في وضع التطوير فقط يمكن الدخول للوحة بـ `admin@perfumestore.jo` / `admin123` بدون Supabase Auth. **هذا الدخول معطّل تماماً في production.**
+In development mode only, you can sign in to the dashboard with `admin@perfumestore.jo` / `admin123` without Supabase Auth. **This login is fully disabled in production.**
 
-### تجربة البوت بدون فيسبوك
+### Trying the bot without Facebook
 ```bash
 python scripts/test_messenger_locally.py
 ```
-أو من لوحة التحكم: **محاكي البوت**. طلبات المحاكي تُعلَّم كتجريبية ولا تظهر في تقرير التوصيل.
+Or from the dashboard: **Bot simulator**. Simulator orders are marked as test orders and do not appear in the delivery report.
 
-### الاختبارات
+### Tests
 ```bash
-pytest            # كل الاختبارات (لا تحتاج اتصالاً بـ Supabase أو Meta)
-make test-cov     # مع تقرير التغطية
+pytest            # all tests (no Supabase or Meta connection needed)
+make test-cov     # with a coverage report
 ```
 
 ---
 
-## 3. ☁️ النشر على Render.com و cron-job.org
+## 3. ☁️ Deploying to Render.com and cron-job.org
 
-### الخطوة 1: رفع المشروع إلى GitHub
-تأكد أن `.env` غير مرفوع (`git status` يجب ألا يظهره؛ هو مُستثنى في `.gitignore`).
+### Step 1: Push the project to GitHub
+Make sure `.env` is not committed (`git status` should not show it; it is excluded in `.gitignore`).
 
-### الخطوة 2: إنشاء الخدمة على Render
-1. ادخل [dashboard.render.com](https://dashboard.render.com) → **New → Blueprint** → اختر المستودع.
-2. يقرأ Render ملف `render.yaml` تلقائياً: خدمة Web، Python 3.11.9، منطقة Frankfurt، الخطة المجانية، فحص صحة على `/health`.
-3. سيطلب منك Render قيم الأسرار (المعلَّمة `sync: false`). انسخها من `.env` المحلي أو من مصادرها (الشرح داخل `.env.example`):
+### Step 2: Create the service on Render
+1. Go to [dashboard.render.com](https://dashboard.render.com) → **New → Blueprint** → pick the repository.
+2. Render reads `render.yaml` automatically: a Web service, Python 3.11.9, Frankfurt region, free plan, health check on `/health`.
+3. Render will ask for the secret values (the ones marked `sync: false`). Copy them from your local `.env` or from their sources (explained in `.env.example`):
 
-   | المتغير | من أين |
+   | Variable | Where to get it |
    |---|---|
    | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API |
    | `GEMINI_API_KEY` | aistudio.google.com/apikey |
-   | `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN`, `META_VERIFY_TOKEN` | تطبيق Meta (انظر القسم 4) |
-   | `FACEBOOK_PAGE_ID` | الرقم التعريفي لصفحة فيسبوك |
-   | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | @BotFather و getUpdates |
-   | `APP_BASE_URL` | اتركه فارغاً الآن، واملأه بعد أول نشر |
+   | `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN`, `META_VERIFY_TOKEN` | The Meta app (see section 4) |
+   | `FACEBOOK_PAGE_ID` | The Facebook page's ID |
+   | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | @BotFather and getUpdates |
+   | `APP_BASE_URL` | Leave empty for now and fill it in after the first deploy |
 
-   `INTERNAL_API_TOKEN` يولّده Render تلقائياً بقيمة عشوائية.
-4. بعد أول نشر ناجح، انسخ رابط الخدمة (مثل `https://messenger-agent.onrender.com`) وضعه في `APP_BASE_URL` ضمن **Environment**، ثم أضف `https://YOUR-APP.onrender.com/auth/**` في Supabase → Authentication → URL Configuration → Redirect URLs.
-5. تحقق: افتح `https://YOUR-APP.onrender.com/health`، يجب أن ترى `"status": "healthy"` و `"database": "connected"`.
+   Render generates `INTERNAL_API_TOKEN` automatically with a random value.
+4. After the first successful deploy, copy the service URL (e.g. `https://messenger-agent.onrender.com`) into `APP_BASE_URL` under **Environment**, then add `https://YOUR-APP.onrender.com/auth/**` in Supabase → Authentication → URL Configuration → Redirect URLs.
+5. Verify: open `https://YOUR-APP.onrender.com/health`; you should see `"status": "healthy"` and `"database": "connected"`.
 
-> **ملاحظات Render المجاني:** الخدمة تنام بعد 15 دقيقة بلا زيارات (لهذا نستخدم cron-job.org)، والخطة تعطي 750 ساعة شهرياً، وهذا يكفي خدمة واحدة تعمل 24/7. أمر التشغيل يتضمن `--proxy-headers --forwarded-allow-ips="*"` كي تبقى الروابط والتحويلات على `https://` خلف موزّع Render.
+> **Render free plan notes:** the service sleeps after 15 minutes without traffic (which is why we use cron-job.org), and the plan gives 750 hours a month, enough for one service running 24/7. The start command includes `--proxy-headers --forwarded-allow-ips="*"` so links and redirects stay on `https://` behind Render's load balancer.
 
-### الخطوة 3: ربط Webhook ماسنجر
-في تطبيق Meta → Messenger → Webhooks:
+### Step 3: Connect the Messenger webhook
+In the Meta app → Messenger → Webhooks:
 - **Callback URL:** `https://YOUR-APP.onrender.com/webhook`
-- **Verify Token:** نفس قيمة `META_VERIFY_TOKEN`
-- اشترك في: `messages`, `messaging_postbacks`
+- **Verify Token:** the same value as `META_VERIFY_TOKEN`
+- Subscribe to: `messages`, `messaging_postbacks`
 
-### الخطوة 4: مهام cron-job.org (مجاني)
-أنشئ حساباً على [cron-job.org](https://cron-job.org) ثم أنشئ مهمتين:
+### Step 4: cron-job.org jobs (free)
+Create an account on [cron-job.org](https://cron-job.org), then create two jobs:
 
-**أ) إبقاء الخادم وقاعدة البيانات مستيقظين**
+**A) Keep the server and database awake**
 - **URL:** `https://YOUR-APP.onrender.com/health`
-- **Schedule:** Custom → `*/14 * * * *` (كل 14 دقيقة)
+- **Schedule:** Custom → `*/14 * * * *` (every 14 minutes)
 - **Method:** GET
 
-هذا يمنع Render من إيقاف الخدمة، ويُجري استعلاماً خفيفاً على Supabase يمنع إيقاف المشروع المجاني بعد 7 أيام بلا نشاط. `/health` يرد دائماً خلال 5 ثوانٍ كحد أقصى.
+This stops Render from putting the service to sleep, and runs a light query on Supabase that stops the free project from being paused after 7 days of inactivity. `/health` always responds within 5 seconds at most.
 
-**ب) التقرير اليومي على تيليجرام الساعة 9:00 مساءً**
+**B) Daily Telegram report at 9:00 PM**
 - **URL:** `https://YOUR-APP.onrender.com/internal/daily-report`
-- **Schedule:** Every day at **21:00**، و **Time zone: Asia/Amman** (من إعدادات المهمة)
+- **Schedule:** Every day at **21:00**, with **Time zone: Asia/Amman** (in the job settings)
 - **Advanced → Request method:** POST
-- **Advanced → Headers:** `X-Internal-Token` = قيمة `INTERNAL_API_TOKEN` (من Render → Environment)
+- **Advanced → Headers:** `X-Internal-Token` = the value of `INTERNAL_API_TOKEN` (from Render → Environment)
 
-بدون الهيدر الصحيح يرفض الخادم الطلب (403)، وإذا كان `INTERNAL_API_TOKEN` فارغاً يرفض كل الطلبات (503). التقرير لا يُرسل مرتين لنفس اليوم، فإعادة المحاولة آمنة. يمكن إيقاف التقرير اليومي أو إرساله يدوياً من لوحة التحكم → **التقارير**.
-
----
-
-## 4. 🔁 الانتقال من صفحة فيسبوك التجريبية إلى صفحة المتجر الحقيقية
-
-الصفحة التي يرد عليها البوت يحددها **متغيران في Render** فقط، ولا حاجة لتعديل الكود:
-- `META_PAGE_ACCESS_TOKEN`: صلاحية إرسال الردود باسم الصفحة.
-- `FACEBOOK_PAGE_ID`: يُستخدم في روابط "راسلنا على ماسنجر" (m.me) في واجهة المتجر وصفحة الخصوصية.
-
-### الخطوات
-1. **صلاحية الإدارة:** يجب أن يكون الحساب الذي يدير تطبيق Meta مديراً (Admin) لصفحة المتجر الحقيقية.
-2. **ربط الصفحة بالتطبيق:** developers.facebook.com → تطبيقك → Messenger → **API Settings** → **Add Page** واختر صفحة المتجر.
-3. **توليد Token جديد:** بجانب الصفحة اضغط **Generate token** وانسخه.
-4. **الاشتراك في الأحداث:** في نفس الصفحة، فعّل اشتراك الصفحة في `messages` و `messaging_postbacks`.
-5. **إلغاء اشتراك الصفحة التجريبية** من نفس القائمة، حتى لا تختلط رسائلها بطلبات المتجر الحقيقية (كل الصفحات المشتركة تُسجَّل على نفس المتجر).
-6. **تحديث Render:** Environment → عدّل:
-   - `META_PAGE_ACCESS_TOKEN` = الـ Token الجديد
-   - `FACEBOOK_PAGE_ID` = رقم صفحة المتجر (من الصفحة → About → Page transparency)
-
-   ثم **Save Changes**، فيعيد Render النشر تلقائياً خلال دقيقة أو اثنتين.
-7. **(اختياري للتوثيق)** في Supabase → Table Editor → `stores`، حدّث `facebook_page_id` إلى رقم الصفحة الجديدة. التطبيق حالياً لا يقرأ هذا العمود، لكنه يبقي البيانات متطابقة.
-8. **الإتاحة للعامة:** ليرد البوت على كل الزبائن (وليس فقط على مدراء التطبيق)، يجب أن يكون التطبيق في وضع **Live** مع صلاحية `pages_messaging` (Advanced Access) عبر **App Review**. رابط سياسة الخصوصية المطلوب: `https://YOUR-APP.onrender.com/privacy`.
-9. **اختبار:** أرسل رسالة لصفحة المتجر من حساب شخصي، وتأكد من وصول الرد، ثم تأكد أن روابط ماسنجر في واجهة المتجر تفتح الصفحة الصحيحة.
-
-> **مهم:** الـ Token المولَّد من Messenger API Settings لا تنتهي صلاحيته عادةً، لكنه يُلغى إذا غيّر مدير الصفحة كلمة المرور أو أزال صلاحيات التطبيق. إذا توقف البوت عن الرد فجأة، ولّد Token جديداً وحدّثه في Render.
+Without the correct header the server rejects the request (403), and if `INTERNAL_API_TOKEN` is empty it rejects every request (503). The report is never sent twice for the same day, so retries are safe. The daily report can be turned off or sent manually from Dashboard → **Reports**.
 
 ---
 
-## 5. 📚 مراجع
+## 4. 🔁 Moving from the test Facebook page to the real store page
 
-### قاعدة البيانات (Supabase)
-طبّق الملفات بالترتيب من **Supabase Dashboard → SQL Editor** (انسخ والصق ثم Run):
+The page the bot replies on is set by **two Render variables** only; no code changes are needed:
+- `META_PAGE_ACCESS_TOKEN`: permission to send replies as the page.
+- `FACEBOOK_PAGE_ID`: used in the "Message us on Messenger" (m.me) links on the storefront and the privacy page.
 
-| الملف | الوظيفة |
+### Steps
+1. **Admin access:** the account that manages the Meta app must be an Admin of the real store page.
+2. **Connect the page to the app:** developers.facebook.com → your app → Messenger → **API Settings** → **Add Page** and pick the store page.
+3. **Generate a new token:** next to the page, click **Generate token** and copy it.
+4. **Subscribe to events:** on the same page, subscribe the page to `messages` and `messaging_postbacks`.
+5. **Unsubscribe the test page** from the same list, so its messages don't get mixed in with the real store's orders (all subscribed pages are recorded under the same store).
+6. **Update Render:** Environment → change:
+   - `META_PAGE_ACCESS_TOKEN` = the new token
+   - `FACEBOOK_PAGE_ID` = the store page's ID (from the page → About → Page transparency)
+
+   Then **Save Changes**, and Render redeploys automatically within a minute or two.
+7. **(Optional, for record-keeping)** In Supabase → Table Editor → `stores`, update `facebook_page_id` to the new page's ID. The app does not currently read this column, but it keeps the data consistent.
+8. **Public availability:** for the bot to reply to all customers (not only the app's admins), the app must be in **Live** mode with the `pages_messaging` permission (Advanced Access) through **App Review**. The required privacy policy URL is `https://YOUR-APP.onrender.com/privacy`.
+9. **Test:** send a message to the store page from a personal account and confirm the reply arrives, then check that the Messenger links on the storefront open the right page.
+
+> **Important:** a token generated from Messenger API Settings usually does not expire, but it is revoked if the page admin changes their password or removes the app's permissions. If the bot suddenly stops replying, generate a new token and update it in Render.
+
+---
+
+## 5. 📚 Reference
+
+### Database (Supabase)
+Apply the files in order from **Supabase Dashboard → SQL Editor** (copy, paste, then Run):
+
+| File | Purpose |
 |---|---|
-| `001_initial_schema.sql` | الجداول، RLS، الفهارس |
-| `002_seed_data.sql` | المتجر الافتراضي، شخصية البوت، الأسئلة الشائعة |
-| `003_product_categories.sql` | فئات المنتجات وفلاتر المتجر |
-| `004_product_types.sql` | أنواع المنتجات |
-| `005_drop_delivery_zones.sql` | حذف مناطق التوصيل (صارت رسوماً ثابتة) |
-| `006_security_hardening.sql` | إصلاحات تنبيهات الأمان في Supabase |
-| `007_report_history_is_scheduled.sql` | تمييز التقارير المجدولة عن اليدوية |
-| `008_product_images_bucket.sql` | مخزن صور المنتجات |
-| `009_orders_is_test.sql` | تمييز طلبات المحاكي لاستبعادها من التقرير |
+| `001_initial_schema.sql` | Tables, RLS, indexes |
+| `002_seed_data.sql` | Default store, bot persona, FAQs |
+| `003_product_categories.sql` | Product categories and storefront filters |
+| `004_product_types.sql` | Product types |
+| `005_drop_delivery_zones.sql` | Drops delivery zones (replaced by a flat fee) |
+| `006_security_hardening.sql` | Fixes for Supabase security advisor warnings |
+| `007_report_history_is_scheduled.sql` | Distinguishes scheduled reports from manual ones |
+| `008_product_images_bucket.sql` | Product photo storage bucket |
+| `009_orders_is_test.sql` | Flags simulator orders so they are excluded from the report |
 
-### حساب المدير
-- **إنشاء الحساب:** Supabase → Authentication → Users → **Add user** (بريد + كلمة مرور).
-- **حساب عرض فقط (Demo):** أضف إلى `app_metadata` للمستخدم: `{"role": "demo"}`. يستطيع التصفح وتجربة المحاكي فقط.
-- من صفحة **الحساب والأمان** (`/dashboard/account`): تغيير البريد (برابط تأكيد) وكلمة المرور، ومن صفحة الدخول: **نسيت كلمة المرور؟**
-- **إعداد Supabase مرة واحدة:**
-  1. Authentication → URL Configuration: **Site URL** = `APP_BASE_URL`، و **Redirect URLs** تتضمن `https://YOUR-APP.onrender.com/auth/**` (و `http://localhost:8080/auth/**` للتجربة المحلية).
-  2. Authentication → Emails → SMTP Settings: فعّل **Custom SMTP** عبر Gmail (Host `smtp.gmail.com`، Port `587`، كلمة مرور تطبيق من [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)). الخادم الافتراضي محدود بحوالي رسالتين في الساعة.
+### Admin account
+- **Create the account:** Supabase → Authentication → Users → **Add user** (email + password).
+- **View-only (demo) account:** add `{"role": "demo"}` to the user's `app_metadata`. It can only browse and try the simulator.
+- From the **Account & security** page (`/dashboard/account`): change the email (with a confirmation link) and password. From the login page: **Forgot your password?**
+- **One-time Supabase setup:**
+  1. Authentication → URL Configuration: **Site URL** = `APP_BASE_URL`, and **Redirect URLs** include `https://YOUR-APP.onrender.com/auth/**` (and `http://localhost:8080/auth/**` for local testing).
+  2. Authentication → Emails → SMTP Settings: enable **Custom SMTP** through Gmail (Host `smtp.gmail.com`, Port `587`, an app password from [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)). The default server is limited to about two emails an hour.
 
-### الأمان في production
-- `/docs` و `/redoc` و `/openapi.json` مخفية.
-- الـ Webhook يرفض أي طلب بدون توقيع `X-Hub-Signature-256` صحيح.
-- `/internal/daily-report` محمي بـ `X-Internal-Token` (مقارنة ثابتة الزمن) ويرفض الكل إذا لم يُضبط.
-- الأخطاء غير المتوقعة تُعرض كصفحة/رسالة عربية بدون تفاصيل تقنية؛ التفاصيل في سجلات Render فقط.
-- السجلات لا تحتوي توكنات (Telegram/Meta/Supabase) ولا روابط استعلامات تحمل أرقام الزبائن.
-- CSRF على كل نماذج اللوحة، تحديد عدد محاولات الدخول، وكوكيز `Secure` و `HttpOnly`.
-- مفتاح `SUPABASE_SERVICE_ROLE_KEY` يُستخدم على الخادم فقط ولا يصل للمتصفح أبداً.
+### Security in production
+- `/docs`, `/redoc` and `/openapi.json` are hidden.
+- The webhook rejects any request without a valid `X-Hub-Signature-256` signature.
+- `/internal/daily-report` is protected by `X-Internal-Token` (constant-time comparison) and rejects everything if it isn't set.
+- Unexpected errors are shown as an Arabic-language page/message with no technical details; the details are in the Render logs only.
+- Logs contain no tokens (Telegram/Meta/Supabase) and no request URLs carrying customer phone numbers.
+- CSRF protection on every dashboard form, login rate limiting, and `Secure` + `HttpOnly` cookies.
+- The `SUPABASE_SERVICE_ROLE_KEY` is used on the server only and never reaches the browser.
 
-### النشر عبر Docker (بديل)
+### Deploying with Docker (alternative)
 ```bash
 make docker-build
-make docker-run      # يقرأ .env ويفتح المنفذ 8080
+make docker-run      # reads .env and exposes port 8080
 ```
