@@ -62,6 +62,16 @@ def password_problem(new_password: str, confirm_password: str) -> str | None:
 
 
 def client_key(request: Request) -> str:
+    """Client IP for rate limiting that a spoofed X-Forwarded-For can't change.
+
+    uvicorn's --forwarded-allow-ips="*" puts the leftmost (client-supplied) XFF
+    entry in request.client.host; the rightmost entry is the one added by the host's
+    load balancer, so use that.
+    """
+    forwarded = request.headers.get("x-forwarded-for", "")
+    hops = [h.strip() for h in forwarded.split(",") if h.strip()]
+    if hops:
+        return hops[-1]
     return request.client.host if request.client else "unknown"
 
 

@@ -89,6 +89,21 @@ def test_login_is_rate_limited_after_repeated_failures(client, supabase_mock):
     assert supabase_mock.auth.sign_in_with_password.call_count == 10
 
 
+def test_login_limit_not_bypassed_by_spoofed_forwarded_for(client, supabase_mock):
+    """A fake leftmost X-Forwarded-For entry must not give the attacker a fresh limit key."""
+    supabase_mock.auth.sign_in_with_password.side_effect = AuthApiError("bad", 400, "invalid_credentials")
+    for i in range(10):
+        client.post(
+            "/auth/login", data={"email": "owner@gmail.com", "password": "wrong"},
+            headers={"X-Forwarded-For": f"10.0.0.{i}, 203.0.113.7"},
+        )
+    res = client.post(
+        "/auth/login", data={"email": "owner@gmail.com", "password": "wrong"},
+        headers={"X-Forwarded-For": "10.9.9.9, 203.0.113.7"},
+    )
+    assert res.status_code == 429
+
+
 def test_logout_revokes_supabase_session(client, supabase_mock):
     client.cookies.set("sb_access_token", "old-token")
     res = client.post("/auth/logout", follow_redirects=False)

@@ -54,3 +54,6 @@ terminal_commands.txt
 
 # Impeccable detector cache (local only)
 .impeccable/hook.cache.json
+
+# Local MCP config (points at the real Supabase project); copy .mcp.json.example
+.mcp.json

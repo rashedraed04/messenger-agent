@@ -9,6 +9,7 @@ import logging
 from typing import Any, Awaitable, Callable
 
 from app.ai.provider_interface import ImageInput
+from app.dashboard.rate_limit import webhook_sender_limiter
 from app.db.repositories.webhook_events import WebhookEventRepository
 from app.messenger.message_types import IncomingMessage, WebhookPayload
 from app.messenger.send_api import MessengerSendAPI
@@ -18,6 +19,8 @@ from app.services.images import fetch_messenger_image
 logger = logging.getLogger(__name__)
 
 MAX_IMAGES_PER_MESSAGE = 3
+# Longer customer messages are cut before reaching the AI
+MAX_TEXT_CHARS = 2000
 
 
 def extract_image_urls(message: IncomingMessage) -> list[str]:
@@ -129,6 +132,15 @@ class WebhookHandler:
                     logger.info("Skipping duplicate webhook event with mid=%s", mid)
                     results.append({"mid": mid, "status": "duplicate_skipped"})
                     continue
+
+                # Per-sender throttle: a spamming sender gets no AI call and no reply
+                if webhook_sender_limiter.is_limited(sender_psid):
+                    logger.warning("Rate-limited webhook sender psid=%s", sender_psid)
+                    results.append({"mid": mid, "status": "rate_limited"})
+                    continue
+                webhook_sender_limiter.hit(sender_psid)
+
+                user_text = user_text[:MAX_TEXT_CHARS]
 
                 # Typing indicator only when the bot is switched on; a disabled bot shows nothing
                 bot_enabled = self.conversation_service.is_bot_enabled(store_id)

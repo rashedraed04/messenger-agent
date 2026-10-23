@@ -151,3 +151,33 @@ def test_typing_indicator_cleared_when_no_reply():
 
     actions = [c.args[1] for c in send_api.send_typing_indicator.await_args_list]
     assert actions == ["typing_on", "typing_off"]
+
+
+def test_spamming_sender_is_rate_limited():
+    """After the per-sender cap, further messages skip the AI and get no reply."""
+    import asyncio
+
+    from app.dashboard.rate_limit import webhook_sender_limiter
+
+    handler, send_api = _handler(bot_enabled=True, replies=["أهلاً"])
+    for i in range(webhook_sender_limiter.max_attempts):
+        res = asyncio.run(handler.process_payload("s1", _single_message_payload(f"mid_spam_{i}")))
+        assert res[0]["status"] == "processed"
+
+    res = asyncio.run(handler.process_payload("s1", _single_message_payload("mid_spam_over")))
+    assert res[0]["status"] == "rate_limited"
+    assert handler.conversation_service.handle_customer_message.await_count == webhook_sender_limiter.max_attempts
+
+
+def test_long_customer_text_is_truncated():
+    import asyncio
+
+    from app.messenger.webhook_handler import MAX_TEXT_CHARS
+
+    handler, _ = _handler(bot_enabled=True, replies=[])
+    payload = _single_message_payload("mid_long")
+    payload["entry"][0]["messaging"][0]["message"]["text"] = "ا" * (MAX_TEXT_CHARS + 500)
+    asyncio.run(handler.process_payload("s1", payload))
+
+    sent_text = handler.conversation_service.handle_customer_message.await_args.kwargs["user_text"]
+    assert len(sent_text) == MAX_TEXT_CHARS

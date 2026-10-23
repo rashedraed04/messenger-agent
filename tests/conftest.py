@@ -21,8 +21,16 @@ os.environ.setdefault("META_APP_SECRET", "test-meta-secret")
 os.environ.setdefault("INTERNAL_API_TOKEN", "test-internal-token")
 
 from app.config import Settings
+from app.dashboard.rate_limit import webhook_sender_limiter
 from app.dependencies import get_config
 from app.main import app
+
+
+@pytest.fixture(autouse=True)
+def clear_webhook_sender_limiter():
+    """The per-sender limiter is module state; start each test with it empty."""
+    webhook_sender_limiter.clear()
+    yield
 
 
 @pytest.fixture
