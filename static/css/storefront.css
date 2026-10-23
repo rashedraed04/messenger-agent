@@ -834,18 +834,26 @@ a.footer-chip:hover {
     color: var(--gold-accent);
 }
 
-/* Deliberately faint so customers don't mistake it for a contact button */
+/* Quieter than the footer chips so customers don't mistake it for a contact button */
 .footer-admin-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--border-color);
+    border-radius: 9px;
+    padding: 0.2rem 0.65rem;
     color: var(--text-secondary);
-    opacity: 0.35;
-    font-size: 0.7rem;
+    opacity: 0.6;
+    font-size: 0.72rem;
     text-decoration: none;
+    transition: opacity 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .footer-admin-link:hover,
 .footer-admin-link:focus-visible {
     opacity: 1;
     color: var(--gold-accent);
+    border-color: var(--border-gold);
 }
 
 /* Card links */
