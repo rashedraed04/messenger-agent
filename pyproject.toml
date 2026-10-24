@@ -33,3 +33,5 @@ ignore = ["E501"]
 [tool.ruff.lint.per-file-ignores]
 # Tests import shared pytest fixtures and receive them as same-named arguments
 "tests/*" = ["F811"]
+# Adds the repo root to sys.path before importing app modules
+"scripts/test_messenger_locally.py" = ["E402"]
